@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[2]:
 
 
 ''' >NUL  2>NUL
@@ -22,10 +22,11 @@ import os
 excel =  register_excel_application()
 
 
-# In[2]:
+# In[4]:
 
 
 if is_interactive():
+    import os
     import subprocess
     subprocess.call(['jupyter', 'nbconvert', '--to', 'script', 'ignis_controller.ipynb'])
     try:
