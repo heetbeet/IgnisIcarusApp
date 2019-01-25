@@ -22,7 +22,7 @@ import os
 excel =  register_excel_application()
 
 
-# In[4]:
+# In[3]:
 
 
 if is_interactive():
@@ -44,7 +44,8 @@ wb, inputs_sheet, outputs_sheet = register_excel_workbook(excel)
 # In[4]:
 
 
-ins1, ins2, ins3, ins4, ins5, ins6 = get_instruments('COM10') #add comm number
+com_val = "COM%d"%(outputs_sheet.Range('B5').Value)
+ins1, ins2, ins3, ins4, ins5, ins6 = get_instruments(com_val) #add comm number
 inst = inputs_writer()
 prev = -9999999
 prev_save = -9999999
