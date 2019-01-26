@@ -20,7 +20,6 @@ import numpy as np
 import os
 
 
-
 # In[74]:
 
 
@@ -52,7 +51,6 @@ prev_save = -9999999
 print('Start')
 try:
     last_update = None
-    strobes = [timeStrober('off') for i in range(8)]
     
     i=-1
     while(1):
