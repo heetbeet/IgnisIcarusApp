@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[76]:
 
 
 ''' >NUL  2>NUL
@@ -19,10 +19,9 @@ from pywintypes import com_error
 import numpy as np
 import os
 
-excel =  register_excel_application()
 
 
-# In[3]:
+# In[74]:
 
 
 if is_interactive():
@@ -35,10 +34,10 @@ if is_interactive():
     os.rename('ignis_controller.py', 'ignis_controller.bat')
 
 
-# In[3]:
+# In[77]:
 
 
-wb, inputs_sheet, outputs_sheet = register_excel_workbook(excel)
+wb, inputs_sheet, outputs_sheet = get_ignis_spreadsheet()
 
 
 # In[4]:

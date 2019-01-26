@@ -6,88 +6,43 @@ def is_interactive():
     import __main__ as main
     return not hasattr(main, '__file__')
 
-def register_excel_application():
-    from win32com.client import Dispatch
-    excel = Dispatch('Excel.Application')
-    try:
-        excel.Visible = True
-    except:
-        pass
-    return excel
+def get_ignis_spreadsheet():
+    import pythoncom
+    import win32api
+    import win32com.client
 
 
-def register_excel_testingbook(excel):
-    books = []
-    
-    for i in range(1, 9999):
+    for moniker in pythoncom.GetRunningObjectTable():
         try:
-            books.append(excel.Workbooks.Item(i))
-        except:
-            break
-        
-    print('Workbook to select from: \n\t'+ '\n\t'.join([book.Name for book in books]))
-    testing_sheet = None
-    thebook = None
-    
-    for book in books:
-        for i in range(50):
-            try:
-                sheet = book.Sheets(i)
-            except: pass
-            else:
-                if sheet.Name == 'testingdataset':
-                    testing_sheet = sheet
-                    thebook = book
-                    
-                    
-    if not testing_sheet:
-        raise ValueError(
-              'Workbook does not contain sheets named '  
-              '"testingdataset". Create them save '
-              'and try again.')    
+            # Workbook implements IOleWindow so only consider objects implementing that
+            window = moniker.BindToObject(pythoncom.CreateBindCtx(0), None, pythoncom.IID_IOleWindow)
+            disp = window.QueryInterface(pythoncom.IID_IDispatch)
 
-    print('Workbook name:', thebook.Name)
-    return thebook, testing_sheet            
-    
 
-def register_excel_workbook(excel):
-    books = []
-    
-    for i in range(1, 9999):
+            # Get a win32com Dispatch object from the PyIDispatch object as it's
+            # easier to work with.
+            book = win32com.client.Dispatch(disp)
+
+        except pythoncom.com_error:
+            # Skip any objects we're not interested in
+            continue
+
         try:
-            books.append(excel.Workbooks.Item(i))
+            book.Sheets(1) #Object is a book with sheets
         except:
-            break
+            continue
+            
+        bookname = moniker.GetDisplayName(pythoncom.CreateBindCtx(0), None)
+        print('Test workbook: ', bookname)
+
+
+        inputs  = [i for i in book.Sheets if i.Name.lower() == 'inputs']
+        outputs = [i for i in book.Sheets if i.Name.lower() == 'outputs']
+
+        if len(inputs) and len(outputs):
+            print('Yes -->', bookname)
+            return book, inputs[0], outputs[0]
         
-    print('Workbook to select from: \n\t'+ '\n\t'.join([book.Name for book in books]))
-    inputs_sheet  = None
-    outputs_sheet = None
-    
-    thebook = None
-    
-    for book in books:
-        for i in range(50):
-            try:
-                sheet = book.Sheets(i)
-            except: pass
-            else:
-                if sheet.Name == 'inputs':
-                    inputs_sheet = sheet
-                if sheet.Name == 'outputs':
-                    outputs_sheet = sheet
-                
-                if inputs_sheet and outputs_sheet:
-                    thebook = book
-                    break
-                    
-    if not (inputs_sheet and outputs_sheet):
-        raise ValueError(
-              'Workbook does not contain sheets named '  
-              '"inputs" or "outputs". Create them save '
-              'and try again.')
-        
-    print('Workbook name:', thebook.Name)
-    return thebook, inputs_sheet, outputs_sheet
 
 def str2bits(s):
     result = []
