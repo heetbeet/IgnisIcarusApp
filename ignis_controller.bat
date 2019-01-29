@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[3]:
 
 
 ''' >NUL  2>NUL
@@ -20,7 +20,7 @@ import numpy as np
 import os
 
 
-# In[2]:
+# In[4]:
 
 
 if is_interactive():
@@ -72,8 +72,8 @@ try:
                 
                 last_update = update
             
-            ins1_ok = ins1_ok[-5:]+[write_to_inst(ins1, [s.is_on() for s in strobes1])]
-            ins6_ok = ins6_ok[-5:]+[write_to_inst(ins6, [s.is_on() for s in strobes2])]
+            ins1_ok = ins1_ok[-10:]+[write_to_inst(ins1, [s.is_on() for s in strobes1])]
+            ins6_ok = ins6_ok[-10:]+[write_to_inst(ins6, [s.is_on() for s in strobes2])]
             
             if(time.time() - prev > 5):
                 _prev = time.time()
