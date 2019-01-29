@@ -1,17 +1,16 @@
 import time
 from datetime import datetime
-
+import os
+import pythoncom
+import win32api
+import win32com.client
 
 def is_interactive():
     import __main__ as main
     return not hasattr(main, '__file__')
 
-def get_ignis_spreadsheet():
-    import pythoncom
-    import win32api
-    import win32com.client
 
-
+def spread_iterator():
     for moniker in pythoncom.GetRunningObjectTable():
         try:
             # Workbook implements IOleWindow so only consider objects implementing that
@@ -33,8 +32,12 @@ def get_ignis_spreadsheet():
             continue
             
         bookname = moniker.GetDisplayName(pythoncom.CreateBindCtx(0), None)
-        print('Test workbook: ', bookname)
 
+        yield bookname, book
+
+def get_ignis_spreadsheet():
+    for bookname, book in spread_iterator():
+        print('Test workbook: ', bookname)
 
         inputs  = [i for i in book.Sheets if i.Name.lower() == 'inputs']
         outputs = [i for i in book.Sheets if i.Name.lower() == 'outputs']
@@ -42,7 +45,19 @@ def get_ignis_spreadsheet():
         if len(inputs) and len(outputs):
             print('Yes -->', bookname)
             return book, inputs[0], outputs[0]
-        
+       
+def get_spreadsheet_by_name(spreadname):
+    for bookname, book in spread_iterator():
+        print('Test workbook: ', bookname)
+        fname = os.path.split(bookname)[-1].lower()
+
+        fexts = ['.xls', '.csv', '.txt']
+        for fext in fexts:
+            if fext in fname:
+                fname = fext.join(fname.split(fext)[:-1])
+        if fname == spreadname.lower():
+            return book
+
 
 def str2bits(s):
     result = []
