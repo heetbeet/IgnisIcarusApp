@@ -45,7 +45,7 @@ def get_ignis_spreadsheet():
         if len(inputs) and len(outputs):
             print('Yes -->', bookname)
             return book, inputs[0], outputs[0]
-       
+        
 def get_spreadsheet_by_name(spreadname):
     for bookname, book in spread_iterator():
         print('Test workbook: ', bookname)
@@ -134,6 +134,13 @@ def get_instruments(comname):
 
     return ins1, ins2, ins3, ins4, ins5, ins6
 
+def write_to_inst(ins, bits):
+    try:
+        ins.write_register(320, bits2int(bits[::-1]))
+        return True
+    except OSError:
+        return False
+    
 
 class test_writer:
     def __init__(self):
@@ -158,20 +165,22 @@ class inputs_writer:
             if not inputs_sheet.Range('A'+str(i)).Value:
                 self.curr_line = i
                 break
-                
-        data =(
-            [str(datetime.now())]+
-            ins2.read_registers(512, 8)+
-            ins2.read_registers(520, 8)+
-            ins3.read_registers(512, 8)+
-            ins3.read_registers(520, 8)+
-            str2bits(ins1.read_string(320,1))[::-1][:8]+
-            ins4.read_registers(512, 8)+
-            ins4.read_registers(520, 8)+
-            ins5.read_registers(512, 8)+
-            ins5.read_registers(520, 8)+
-            str2bits(ins6.read_string(320,1))[::-1][:8]
-        )
+        try:        
+            data =(
+                [str(datetime.now())]+
+                ins2.read_registers(512, 8)+
+                ins2.read_registers(520, 8)+
+                ins3.read_registers(512, 8)+
+                ins3.read_registers(520, 8)+
+                str2bits(ins1.read_string(320,1))[::-1][:8]+
+                ins4.read_registers(512, 8)+
+                ins4.read_registers(520, 8)+
+                ins5.read_registers(512, 8)+
+                ins5.read_registers(520, 8)+
+                str2bits(ins6.read_string(320,1))[::-1][:8]
+            )
+        except:
+            return False
 
-        inputs_sheet.Range('A%d:CC%d'%(self.curr_line, self.curr_line)
-                          ).Value = data
+        inputs_sheet.Range('A%d:CC%d'%(self.curr_line, self.curr_line)).Value = data
+        return True

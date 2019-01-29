@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[76]:
+# In[1]:
 
 
 ''' >NUL  2>NUL
@@ -20,7 +20,7 @@ import numpy as np
 import os
 
 
-# In[74]:
+# In[2]:
 
 
 if is_interactive():
@@ -33,13 +33,13 @@ if is_interactive():
     os.rename('ignis_controller.py', 'ignis_controller.bat')
 
 
-# In[77]:
+# In[ ]:
 
 
 wb, inputs_sheet, outputs_sheet = get_ignis_spreadsheet()
 
 
-# In[4]:
+# In[ ]:
 
 
 com_val = "COM%d"%(outputs_sheet.Range('B5').Value)
@@ -47,6 +47,10 @@ ins1, ins2, ins3, ins4, ins5, ins6 = get_instruments(com_val) #add comm number
 inst = inputs_writer()
 prev = -9999999
 prev_save = -9999999
+
+ins1_ok = []
+ins6_ok = []
+read_ok = []
 
 print('Start')
 try:
@@ -68,19 +72,27 @@ try:
                 
                 last_update = update
             
-            bits = [s.is_on() for s in strobes1][::-1]
-            ins1.write_register(320, bits2int(bits))
-
-            bits = [s.is_on() for s in strobes2][::-1]
-            ins6.write_register(320, bits2int(bits))
+            ins1_ok = ins1_ok[-5:]+[write_to_inst(ins1, [s.is_on() for s in strobes1])]
+            ins6_ok = ins6_ok[-5:]+[write_to_inst(ins6, [s.is_on() for s in strobes2])]
             
             if(time.time() - prev > 5):
-                prev = time.time()
-                inst.do_readings(inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6)
+                _prev = time.time()
+                read_ok = read_ok[-3:]+[inst.do_readings(inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6)]
+                
+                if read_ok[-1]:
+                    prev = _prev
                 
             if(time.time() - prev_save > 60*3):
                 prev_save = time.time()
                 wb.Save()
+                
+            
+            if ~np.any(ins1_ok): #not even once in 4 times
+                raise OSError("Can't write to instrument 1.")
+            if ~np.any(ins6_ok):
+                raise OSError("Can't write to instrument 6.")
+            if ~np.any(read_ok):
+                raise OSError("One instrument can't be read do_readings(self, ...).")
 
         except com_error:
             if i%10 ==0:
