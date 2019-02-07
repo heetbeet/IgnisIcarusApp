@@ -141,6 +141,11 @@ def write_to_inst(ins, bits):
     except OSError:
         return False
     
+def get_mode_limit(wb):
+    results_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
+    compiled_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'compiled data'][0]
+    return [results_sheet.Range("AW3").Value,
+            compiled_sheet.Range("BZ4").Value]
 
 class test_writer:
     def __init__(self):
@@ -160,7 +165,7 @@ class inputs_writer:
     def __init__(self):
         self.curr_line = 6
     
-    def do_readings(self, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6):
+    def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6):
         for i in range(self.curr_line,60000):
             if not inputs_sheet.Range('A'+str(i)).Value:
                 self.curr_line = i
@@ -182,5 +187,7 @@ class inputs_writer:
         except:
             return False
 
+        inputs_sheet.Range('CE%d:CF%d'%(self.curr_line, self.curr_line)).Value = get_mode_limit(wb)
         inputs_sheet.Range('A%d:CC%d'%(self.curr_line, self.curr_line)).Value = data
+        
         return True

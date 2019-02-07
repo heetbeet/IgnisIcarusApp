@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[3]:
+# In[1]:
 
 
 ''' >NUL  2>NUL
@@ -20,7 +20,7 @@ import numpy as np
 import os
 
 
-# In[4]:
+# In[2]:
 
 
 if is_interactive():
@@ -33,7 +33,7 @@ if is_interactive():
     os.rename('ignis_controller.py', 'ignis_controller.bat')
 
 
-# In[ ]:
+# In[3]:
 
 
 wb, inputs_sheet, outputs_sheet = get_ignis_spreadsheet()
@@ -77,7 +77,7 @@ try:
             
             if(time.time() - prev > 5):
                 _prev = time.time()
-                read_ok = read_ok[-3:]+[inst.do_readings(inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6)]
+                read_ok = read_ok[-3:]+[inst.do_readings(wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6)]
                 
                 if read_ok[-1]:
                     prev = _prev
@@ -85,7 +85,6 @@ try:
             if(time.time() - prev_save > 60*3):
                 prev_save = time.time()
                 wb.Save()
-                
             
             if ~np.any(ins1_ok): #not even once in 4 times
                 raise OSError("Can't write to instrument 1.")
@@ -102,6 +101,4 @@ try:
 
 except KeyboardInterrupt:
     print('\nStop')
-    
-    
 
