@@ -5,6 +5,9 @@ import pythoncom
 import win32api
 import win32com.client
 
+alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+num2col = [i for i in alph] + [i+j for i in alph for j in alph]
+
 def is_interactive():
     import __main__ as main
     return not hasattr(main, '__file__')
@@ -164,8 +167,18 @@ class test_writer:
 class inputs_writer:
     def __init__(self):
         self.curr_line = 6
+        self.sensitivity_col = None
+        self.results_sheet = None
+        self.inputs_sheet = None
     
     def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6):
+        if self.sensitivity_col is None:
+            self.inputs_sheet   = [i for i in wb.Sheets if i.Name.lower() == 'inputs' ][0]
+            self.results_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
+            for i, val in enumerate(self.results_sheet.Range("5:5").Value[0]):
+                if str(val).lower().strip() == 'sensitivity':
+                    self.sensitivity_col = num2col[i]
+        
         for i in range(self.curr_line,60000):
             if not inputs_sheet.Range('A'+str(i)).Value:
                 self.curr_line = i
@@ -187,7 +200,8 @@ class inputs_writer:
         except:
             return False
 
-        inputs_sheet.Range('CE%d:CF%d'%(self.curr_line, self.curr_line)).Value = get_mode_limit(wb)
-        inputs_sheet.Range('A%d:CC%d'%(self.curr_line, self.curr_line)).Value = data
+        self.inputs_sheet.Range('CE%d:CF%d'%(self.curr_line, self.curr_line)).Value = get_mode_limit(wb)
+        self.inputs_sheet.Range('CD%d'%(self.curr_line)).Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
+        self.inputs_sheet.Range('A%d:CC%d'%(self.curr_line, self.curr_line)).Value = data
         
         return True
