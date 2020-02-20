@@ -123,19 +123,16 @@ class timeStrober:
         else:
             return False
 
-def get_instruments(comname):
+def get_instruments(comname, nr_of_devices):
     import minimalmodbus
 
     minimalmodbus.BAUDRATE = 9600
     minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
-    ins1 = minimalmodbus.Instrument(comname, 1)
-    ins2 = minimalmodbus.Instrument(comname, 2)
-    ins3 = minimalmodbus.Instrument(comname, 3)
-    ins4 = minimalmodbus.Instrument(comname, 4)
-    ins5 = minimalmodbus.Instrument(comname, 5)
-    ins6 = minimalmodbus.Instrument(comname, 6)
-
-    return ins1, ins2, ins3, ins4, ins5, ins6
+    instances = []
+    for i in range(1, nr_of_devices+1):
+        instances.append(minimalmodbus.Instrument(comname, i))
+    
+    return instances
 
 def write_to_inst(ins, bits):
     try:
@@ -171,7 +168,7 @@ class inputs_writer:
         self.results_sheet = None
         self.inputs_sheet = None
     
-    def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6):
+    def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6, ins7):
         if self.sensitivity_col is None:
             self.inputs_sheet   = [i for i in wb.Sheets if i.Name.lower() == 'inputs' ][0]
             self.results_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
@@ -196,12 +193,27 @@ class inputs_writer:
                 ins5.read_registers(512, 8)+
                 ins5.read_registers(520, 8)+
                 str2bits(ins6.read_string(320,1))[::-1][:8]
+                ins7.read_registers(512, 8)+
+                ins7.read_registers(520, 8)
             )
         except:
             return False
 
-        self.inputs_sheet.Range('CE%d:CF%d'%(self.curr_line, self.curr_line)).Value = get_mode_limit(wb)
-        self.inputs_sheet.Range('CD%d'%(self.curr_line)).Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
-        self.inputs_sheet.Range('A%d:CC%d'%(self.curr_line, self.curr_line)).Value = data
+        #Some excel conversions ans lookups
+        alph = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        xl = alph+[i+j for i in alph for j in alph]
+        
+        row = self.curr_line
+        
+        col0 = xl[0]           #datalines from the instuments
+        col1 = xl[len(data)-1]
+        
+        col2 = xl[len(data)]  #extra feedback from excel
+        col3 = xl[len(data)+1]
+        col4 = xl[len(data)+2]
+        
+        self.inputs_sheet.Range(f'{col2}{row}:{col3}{row}').Value = get_mode_limit(wb)
+        self.inputs_sheet.Range(f'{col4}{row}').Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
+        self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
         
         return True
