@@ -145,7 +145,7 @@ def get_mode_limit(wb):
     results_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
     compiled_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'compiled data'][0]
     return [results_sheet.Range("AW3").Value,
-            compiled_sheet.Range("BZ4").Value]
+            compiled_sheet.Range("CP4").Value]
 
 class test_writer:
     def __init__(self):
@@ -192,7 +192,7 @@ class inputs_writer:
                 ins4.read_registers(520, 8)+
                 ins5.read_registers(512, 8)+
                 ins5.read_registers(520, 8)+
-                str2bits(ins6.read_string(320,1))[::-1][:8]
+                str2bits(ins6.read_string(320,1))[::-1][:8]+
                 ins7.read_registers(512, 8)+
                 ins7.read_registers(520, 8)
             )

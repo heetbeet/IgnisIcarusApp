@@ -1,23 +1,8 @@
-
-# coding: utf-8
-
-# In[2]:
-
-
-''' >NUL  2>NUL
-@echo off
-cd /d %~dp0
-:loop
-python %0 %*
-goto loop
-'''
-
 import misc; 
 import time
 import importlib; importlib.reload(misc)
 from pywintypes import com_error
 import numpy as np
-import os
 
 
 # In[4]:
@@ -64,7 +49,7 @@ try:
             
             if(time.time() - prev > 5):
                 _prev = time.time()
-                read_ok = read_ok[-3:]+[inst.do_readings(wb, inputs_sheet, [ins1, ins2, ins3, ins4, ins5, ins6, ins7])]
+                read_ok = read_ok[-3:]+[inst.do_readings(wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6, ins7)]
                 
                 if read_ok[-1]:
                     prev = _prev
