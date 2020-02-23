@@ -145,7 +145,7 @@ def get_mode_limit(wb):
     results_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
     compiled_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'compiled data'][0]
     return [results_sheet.Range("AW3").Value,
-            compiled_sheet.Range("CP4").Value]
+            compiled_sheet.Range("CX4").Value]
 
 class test_writer:
     def __init__(self):
@@ -212,8 +212,8 @@ class inputs_writer:
         col3 = xl[len(data)+1]
         col4 = xl[len(data)+2]
         
-        self.inputs_sheet.Range(f'{col2}{row}:{col3}{row}').Value = get_mode_limit(wb)
-        self.inputs_sheet.Range(f'{col4}{row}').Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
+        self.inputs_sheet.Range(f'{col3}{row}:{col4}{row}').Value = get_mode_limit(wb)
+        self.inputs_sheet.Range(f'{col2}{row}').Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
         self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
         
         return True
