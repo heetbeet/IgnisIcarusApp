@@ -25,6 +25,7 @@ ins6_ok = []
 read_ok = []
 
 print('Start')
+last_success = np.inf
 try:
     last_update = None
     
@@ -41,7 +42,6 @@ try:
 
                 strobe_settings = outputs_sheet.Range('M3:T3').Value[0]
                 strobes2 = [misc.timeStrober(s) for s in strobe_settings]
-                
                 last_update = update
             
             ins1_ok = ins1_ok[-10:]+[misc.write_to_inst(ins1, [s.is_on() for s in strobes1])]
@@ -64,10 +64,23 @@ try:
                 raise OSError("Can't write to instrument 6.")
             if ~np.any(read_ok):
                 raise OSError("One instrument can't be read do_readings(self, ...).")
-
+            
+            if i%10 ==0: 
+                print("y", end='\n' if i%600==0 else '')
+                
+            last_success = time.time()
+            
+        #Give alarm if the excel sheet is blocked
         except com_error:
             if i%10 ==0:
-                print('.', end='\n' if i%600==0 else '')
+                print('x', end='\n' if i%600==0 else '')
+                    
+            if time.time() - last_success > 10:
+                bits = [s.is_on() for s in strobes1]
+                bits[-2] = round(np.random.rand()) #Overwrite alarm bit
+                
+                misc.write_to_inst(ins1, bits)
+            
         #except ValueError:
         #    print('\nValueError occured')
 
