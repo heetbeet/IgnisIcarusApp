@@ -66,14 +66,14 @@ try:
                 raise OSError("One instrument can't be read do_readings(self, ...).")
             
             if i%10 ==0: 
-                print("y", end='\n' if i%600==0 else '')
+                print("y", end='\n' if i%600==0 else '', flush=True)
                 
             last_success = time.time()
             
         #Give alarm if the excel sheet is blocked
         except com_error:
             if i%10 ==0:
-                print('x', end='\n' if i%600==0 else '')
+                print('x', end='\n' if i%600==0 else '', flush=True)
                     
             if time.time() - last_success > 10:
                 bits = [s.is_on() for s in strobes1]
