@@ -62,8 +62,8 @@ try:
                 raise OSError("Can't write to instrument 1.")
             if ~np.any(ins6_ok):
                 raise OSError("Can't write to instrument 6.")
-            #if ~np.any(read_ok):
-            #    raise OSError("One instrument can't be read by do_readings(self, ...).")
+            if ~np.any(read_ok):
+                raise OSError("One instrument can't be read by do_readings(self, ...).")
             
             if i%10 ==0: 
                 print("y", end='\n' if i%600==0 else '', flush=True)
