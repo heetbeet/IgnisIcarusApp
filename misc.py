@@ -1,9 +1,11 @@
+#%%
 import time
 from datetime import datetime
 import os
 import pythoncom
 import win32api
 import win32com.client
+import traceback
 
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
@@ -216,4 +218,55 @@ class inputs_writer:
         self.inputs_sheet.Range(f'{col2}{row}').Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
         self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
         
+        return True
+
+
+class inputs_writer_icarus:
+    def __init__(self):
+        self.curr_line = 6
+        self.sensitivity_col = None
+        self.results_sheet = None
+        self.inputs_sheet = None
+
+    def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4):
+        if self.sensitivity_col is None:
+            self.inputs_sheet = [i for i in wb.Sheets if i.Name.lower() == 'inputs'][0]
+            self.results_sheet = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
+            for i, val in enumerate(self.results_sheet.Range("5:5").Value[0]):
+                if str(val).lower().strip() == 'sensitivity':
+                    self.sensitivity_col = num2col[i]
+
+        for i in range(self.curr_line, 60000):
+            if not inputs_sheet.Range('A' + str(i)).Value:
+                self.curr_line = i
+                break
+        try:
+            data_date = [str(datetime.now())]                        # 0
+            data2 = ins2.read_registers(512, 8)                      # 1-8
+            data3 = ins3.read_registers(512, 8)                      # 9-16
+            #data4 = ins4.read_registers(30002, 8)                    # 17-24
+            data1 = str2bits(ins1.read_string(320, 1))[::-1][:8]     # 25-32
+
+            data = (data_date + data2 + data3 + #data4 +
+                    data1)
+
+        except Exception as e:
+            traceback.print_exc()
+            return False
+
+        # Some excel conversions ans lookups
+        alph = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        xl = alph + [i+j for i in alph for j in alph]
+
+        row = self.curr_line
+
+        col0 = xl[0]  # datalines from the instuments
+        col1 = xl[len(data) - 1]
+
+        #col2 = xl[len(data)]  # extra feedback from excel
+        #col3 = xl[len(data) + 1]
+        #col4 = xl[len(data) + 2]
+
+        self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
+
         return True
