@@ -1,15 +1,18 @@
-import misc; 
+import misc
 import time
-import importlib; importlib.reload(misc)
+import importlib
+importlib.reload(misc)
 from pywintypes import com_error
 import numpy as np
 import devices
+import scale_device
 
 wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
 
-com_val = "COM%d"%(outputs_sheet.Range('B5').Value)
+time_interval_val = outputs_sheet.Range('B5').Value
 instruments = devices.get_instruments([1,2,3,4])
-ins1, ins2, ins3, ins4 = [instruments[i][1] for i in [1,2,3,4]]#misc.get_instruments(com_val, 7)
+scale = scale_device.ScaleDevice()
+ins1, ins2, ins3, ins4 = [instruments[i][1] for i in [1,2,3,4]]
 
 iwrite = misc.inputs_writer_icarus()
 prev = -9999999
@@ -41,9 +44,14 @@ try:
             
             ins1_ok = ins1_ok[-10:]+[misc.write_to_inst(ins1, [s.is_on() for s in strobes1])]
             
-            if(time.time() - prev > 5):
+            if(time.time() - prev > time_interval_val):
                 _prev = time.time()
                 read_ok = read_ok[-3:]+[iwrite.do_readings(wb, inputs_sheet, ins1, ins2, ins3, ins4)]
+
+                #Hack in the scale readings
+                iwrite.inputs_sheet.Range(f"AH{iwrite.curr_line}").Value = scale.mass
+
+
                 
                 if read_ok[-1]:
                     prev = _prev
@@ -57,7 +65,7 @@ try:
             if ~np.any(read_ok):
                 raise OSError("One instrument can't be read do_readings(self, ...).")
             
-            if i%10 ==0: 
+            if (i+1)%10 ==0:
                 print("y", end='\n' if i%600==0 else '', flush=True)
                 
             last_success = time.time()
