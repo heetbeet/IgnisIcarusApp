@@ -244,11 +244,10 @@ class inputs_writer_icarus:
             data_date = [str(datetime.now())]                        # 0
             data2 = ins2.read_registers(512, 8)                      # 1-8
             data3 = ins3.read_registers(512, 8)                      # 9-16
-            #data4 = ins4.read_registers(30002, 8)                    # 17-24
+            data4 = ins4.read_registers(30002, 8)                    # 17-24
             data1 = str2bits(ins1.read_string(320, 1))[::-1][:8]     # 25-32
 
-            data = (data_date + data2 + data3 + #data4 +
-                    data1)
+            data = (data_date + data2 + data3 + data4)
 
         except Exception as e:
             traceback.print_exc()
@@ -268,5 +267,6 @@ class inputs_writer_icarus:
         #col4 = xl[len(data) + 2]
 
         self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
+        self.inputs_sheet.Range(f'AI{row}:AP{row}').Value = data1
 
         return True

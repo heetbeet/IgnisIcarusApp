@@ -52,7 +52,6 @@ try:
                 iwrite.inputs_sheet.Range(f"AH{iwrite.curr_line}").Value = scale.mass
 
 
-                
                 if read_ok[-1]:
                     prev = _prev
                 
