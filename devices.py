@@ -42,7 +42,12 @@ def get_instruments(device_ids):
     not_found = set(device_ids).difference(instances)
     if not_found:
         ln = '\n'
-        raise ConnectionError(f"Could not connect to Devices: {list(not_found)}, but did find: \n{ln.join([str(i) for i in instances.values()])}")
+        errmsg = f"Could not connect to Devices: {list(not_found)}"
+        if instances:
+            errmsg = errmsg + f", but did find: \n{ln.join([str(i) for i in instances.values()])}"
+        errmsg = errmsg + "."
+
+        raise ConnectionError(errmsg)
 
     return instances
 
