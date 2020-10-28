@@ -11,8 +11,8 @@ wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
 
 time_interval_val = outputs_sheet.Range('B5').Value
 
-instruments = devices.get_instruments([1,2,3,4])
 scale = scale_device.ScaleDevice()
+instruments = devices.get_instruments([1,2,3,4])
 ins1, ins2, ins3, ins4 = [instruments[i][1] for i in [1,2,3,4]]
 
 
