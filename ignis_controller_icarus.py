@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 import misc
+import sys
 import time
 import importlib
 importlib.reload(misc)
@@ -7,6 +8,7 @@ from pywintypes import com_error
 import numpy as np
 import devices
 import scale_device
+import traceback
 
 wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
 
@@ -67,7 +69,11 @@ try:
                 read_ok = read_ok[-3:]+[iwrite.do_readings(wb, inputs_sheet, ins1, ins2, ins3, ins4)]
 
                 #Hack in the scale readings
-                iwrite.inputs_sheet.Range(f"AH{iwrite.curr_line}").Value = scale.mass
+                try:
+                    iwrite.inputs_sheet.Range(f"AH{iwrite.curr_line}").Value = scale.mass
+                except AttributeError:
+                    print(traceback.format_exc())
+                    sys.exit()
 
 
                 if read_ok[-1]:
