@@ -63,6 +63,15 @@ def get_spreadsheet_by_name(spreadname):
         if fname == spreadname.lower():
             return book
 
+def force_int(s):
+    s = str(s)
+    if "." in s:
+        val = float(s)
+    else:
+        val = int(s, 0)
+
+    return int(val)
+
 
 def str2bits(s):
     result = []
@@ -136,9 +145,12 @@ def get_instruments(comname, nr_of_devices):
     
     return instances
 
-def write_to_inst(ins, bits):
+def write_to_inst(ins, value, reg=320):
+    if isinstance(value, list) or isinstance(value, tuple):
+        value = bits2int(value[::-1])
+
     try:
-        ins.write_register(320, bits2int(bits[::-1]))
+        ins.write_register(reg, value)
         return True
     except OSError:
         return False
