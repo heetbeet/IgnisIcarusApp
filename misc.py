@@ -244,7 +244,8 @@ class inputs_writer_icarus:
             data_date = [str(datetime.now())]                        # 0
             data2 = ins2.read_registers(512, 8)                      # 1-8
             data3 = ins3.read_registers(512, 8)                      # 9-16
-            data4 = [None]*8 #ins4.read_registers(30002, 8)          # 17-24
+            #data4 = [None]*8
+            data4 = ins4.read_registers(1, 8)                        # 17-24
             data1 = str2bits(ins1.read_string(320, 1))[::-1][:8]     # 25-32
 
             data = (data_date + data2 + data3 + data4)

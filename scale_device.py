@@ -45,9 +45,12 @@ def _find_scale():
             pass
 
     if not readings:
-        raise ConnectionError(f"Cannot read any scale-device on COMs {comms}.")
+        if not comms:
+            raise ConnectionError(f"Cannot make any RS232 connection to Preciso Scale Tronic.")
+        else:
+            raise ConnectionError(f"Cannot read values from Preciso Scale Tronic (tried COMs {comms}).")
     else:
-        raise ConnectionError(f"Cannot read any floating point value from scale-device on COMs {comms}. Got: {''.join(readings)}")
+        raise ConnectionError(f"Cannot read floating point value from Preciso Scale Tronic. Tried COMs {comms}, got values: {' '.join(readings)}")
 
 
 class ScaleDevice:
