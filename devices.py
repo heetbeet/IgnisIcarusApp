@@ -23,18 +23,12 @@ def get_instruments(device_ids):
     device_ids_to_go = list(device_ids)
 
     # Most popular things to iterate over must come last. Rare things must come first
-    parities = [serial.PARITY_NONE #, serial.PARITY_EVEN, serial.PARITY_ODD
-                ]
-    stopbits_ = [serial.STOPBITS_ONE #, serial.STOPBITS_TWO
-                 ]
-    bytesizes = [8 #, 7
-                 ]
+    parities = [serial.PARITY_NONE]   # serial.PARITY_EVEN, serial.PARITY_ODD
+    stopbits_ = [serial.STOPBITS_ONE] # serial.STOPBITS_TWO
+    bytesizes = [8]                   # 7
     modes = ["rtu", "ascii"]
     comrange = [1,2,3,4,5,6,7,8,9,10]
-    registers = [512,
-                 320,
-                 0x100,
-                 1]
+    registers = [512, 320, 0x100, 1]
 
     search_count = 0
     for par, sbit, bsz, mode, com, id, reg in itertools.product(

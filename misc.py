@@ -2,6 +2,9 @@
 import time
 from datetime import datetime
 import os
+from types import SimpleNamespace
+
+import minimalmodbus
 import pythoncom
 import win32api
 import win32com.client
@@ -10,9 +13,38 @@ import traceback
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
 
+
 def is_interactive():
     import __main__ as main
     return not hasattr(main, '__file__')
+
+
+def try_thrice(f, *args, errors_list=None, **kwargs):
+    """
+    Try to run a function three times before giving up
+
+    >>> count = {'i':0}
+    >>> # noinspection PyUnresolvedReferences
+    ... def func():
+    ...     count['i'] += 1
+    ...     assert count['i'] >= 3
+
+    >>> try_thrice(func)
+
+    """
+    if errors_list is None:
+        errors_list = Exception
+    else:
+        errors_list = tuple(errors_list)
+
+    for i in range(2):
+        # noinspection PyBroadException
+        try:
+            return f(*args, **kwargs)
+        except errors_list:
+            time.sleep(0.05)
+
+    return f(*args, **kwargs)
 
 
 def spread_iterator():
@@ -62,6 +94,7 @@ def get_spreadsheet_by_name(spreadname):
                 fname = fext.join(fname.split(fext)[:-1])
         if fname == spreadname.lower():
             return book
+
 
 def force_int(s):
     s = str(s)
@@ -252,16 +285,27 @@ class inputs_writer_icarus:
             if not inputs_sheet.Range('A' + str(i)).Value:
                 self.curr_line = i
                 break
-        try:
-            data_date = [str(datetime.now())]                        # 0
-            data2 = ins2.read_registers(512, 8)                      # 1-8
-            data3 = ins3.read_registers(512, 8)                      # 9-16
-            #data4 = [None]*8
-            data4 = ins4.read_registers(1, 8)                        # 17-24
-            data1 = str2bits(ins1.read_string(320, 1))[::-1][:8]     # 25-32
 
+        def _read():
+            none_line = [None] * 8
+
+            data_date = [str(datetime.now())]  # 0
+            data2 = ins2.read_registers(512, 8) if ins2 is not None else none_line  # 1-8
+            data3 = ins3.read_registers(512, 8) if ins3 is not None else none_line  # 9-16
+            data4 = ins4.read_registers(1, 8) if ins4 is not None else none_line  # 17-24
+            data1 = str2bits(ins1.read_string(320, 1))[::-1][:8] if ins1 is not None else none_line  # 25-32
             data = (data_date + data2 + data3 + data4)
 
+            return SimpleNamespace(
+                data1=data1,
+                data2=data2,
+                data3=data3,
+                data4=data4,
+                data=data
+            )
+
+        try:
+            p = try_thrice(_read, errors_list=[minimalmodbus.NoResponseError])
         except Exception as e:
             traceback.print_exc()
             return False
@@ -273,13 +317,9 @@ class inputs_writer_icarus:
         row = self.curr_line
 
         col0 = xl[0]  # datalines from the instuments
-        col1 = xl[len(data) - 1]
+        col1 = xl[len(p.data) - 1]
 
-        #col2 = xl[len(data)]  # extra feedback from excel
-        #col3 = xl[len(data) + 1]
-        #col4 = xl[len(data) + 2]
-
-        self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
-        self.inputs_sheet.Range(f'AI{row}:AP{row}').Value = data1
+        self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = p.data
+        self.inputs_sheet.Range(f'AI{row}:AP{row}').Value = p.data1
 
         return True
