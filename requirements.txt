@@ -1,0 +1,5 @@
+pydicti
+xlwings
+minimalmodbus
+ordered-set
+git+ssh://git@github.com/AutoActuary/aa-py-core.git#egg=aa-py-core
