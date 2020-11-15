@@ -36,7 +36,7 @@ def _find_scale():
             readings.extend([ser.readline().decode('utf-8').strip() for i in range(3)][-1])
             try:
                 val = float(readings[-1])
-                print(f"Found scale on COM{i}")
+                #print(f"Found scale on COM{i}")
                 return ser, val
             except:
                 pass

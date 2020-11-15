@@ -7,19 +7,6 @@ minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
 def get_instruments(device_ids):
     instances = {}
 
-    """
-    instrument.serial.port                     # this is the serial port name
-    instrument.serial.baudrate = 19200         # Baud
-    instrument.serial.bytesize = 8
-    instrument.serial.parity   = serial.PARITY_NONE
-    instrument.serial.stopbits = 1
-    instrument.serial.timeout  = 0.05          # seconds
-    
-    instrument.address                         # this is the slave address number
-    instrument.mode = minimalmodbus.MODE_RTU   # rtu or ascii mode
-    instrument.clear_buffers_before_each_transaction = True
-    """
-
     device_ids_to_go = list(device_ids)
 
     # Most popular things to iterate over must come last. Rare things must come first
