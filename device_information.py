@@ -1,3 +1,4 @@
+from contextlib import suppress
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Union, List, Any, get_type_hints
@@ -61,17 +62,22 @@ class DeviceInfo:
             def do_read():
                 # Reading a unsigned int normally
                 if self.line.datatype == 'uint':
-                    return self.device.read_registers(self.line.start_register, self.line.no_of_registers)
+                    values = self.device.read_registers(self.line.start_register,
+                                                        self.line.no_of_registers)
+                    return values
 
                 # Reading a unsigned int as a list of bits
                 elif self.line.datatype == "char bits":
                     values = []
-                    for i in range(self.line.start_register,
-                                   self.line.start_register+self.line.no_of_registers):
+                    for i in range(force_int(self.line.start_register),
+                                   force_int(self.line.start_register+self.line.no_of_registers)):
                         values.extend(
                             str2bits(self.device.read_string(i, 1))[::-1]
                         )
                     return values
+
+                else:
+                    ValueError('Datatype must be either "uint" or "char bits"')
 
             return try_n(do_read, tries=4)
 
@@ -96,20 +102,20 @@ class DeviceInfo:
         )
 
     def output_to_excel(self, sheet, line_number):
-        vals = self.read()
+        if (vals := self.read()) is not None:
+            # Add line number to dump_cols
+            dump_cols = self.line.dump_cols
+            dump_cols = ':'.join([f'{i}{line_number}' for i in dump_cols.split(':')])
 
-        # Add line number to dump_cols
-        dump_cols = self.line.dump_cols
-        dump_cols = ':'.join([f'{i}{line_number}' for i in dump_cols.split(':')])
+            def do_output():
+                range = sheet.Range(dump_cols)
+                range.value = vals[:len(range)]
 
-        def do_output():
-            range = sheet.Range(self.line.dump_cols)
-            range.value = vals[:len(range)]
 
-        try_n(
-            lambda: do_output,
-            tries = 50
-        )
+            try_n(
+                do_output,
+                tries = 50
+            )
 
 
 class DeviceInfoScale(DeviceInfo):
@@ -152,13 +158,16 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
                 try:
                     line.__dict__[col] = force_int(line.__dict__[col])
                 except ValueError:
-
                     raise ValueError(f"Invalid {col} for {line.device_name}: {line}")
+
+            line.start_register = force_int(line.start_register)
+            with suppress(ValueError):
+                line.no_of_registers = force_int(line.no_of_registers)
 
             line.parity = str(line.parity).upper()
             line.communication_format = str(line.communication_format).lower()
 
-
+            found_it = False
             for com in [f"COM{i}" for i in range(1 ,12)]:
                 try:
                     dev = minimalmodbus.Instrument(com, line.address, mode=line.communication_format)
@@ -170,7 +179,6 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
                 except SerialException:
                     continue
 
-                found_it = False
                 for f in (dev.read_bits, dev.read_string):
                     try:
                         f(line.start_register, 1)
@@ -181,13 +189,14 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
                         )
                         break
 
-                    except (minimalmodbus.NoResponseError, minimalmodbus.InvalidResponseError, minimalmodbus.IllegalRequestError):
+                    except (minimalmodbus.NoResponseError, minimalmodbus.InvalidResponseError, minimalmodbus.IllegalRequestError) :
                         pass
 
                 if found_it:
                     break
-                else:
-                    failures.append(str(line.device_name))
+
+            if not found_it:
+                failures.append(str(line.device_name))
 
     if failures:
 

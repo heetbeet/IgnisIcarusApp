@@ -30,8 +30,18 @@ def try_n(f, *args, errors_list=None, tries=3, **kwargs):
     ... def func():
     ...     count['i'] += 1
     ...     assert count['i'] >= 4
+    ...     return 9
+
+    >>> try_n(func, tries=3)
+    Traceback (most recent call last):
+    ...
+    AssertionError
 
     >>> try_n(func, tries=4)
+    9
+
+    >>> try_n(func, tries=5)
+    9
 
     """
     if errors_list is None:
@@ -40,7 +50,6 @@ def try_n(f, *args, errors_list=None, tries=3, **kwargs):
         errors_list = tuple(errors_list)
 
     for i in range(tries-1):
-        # noinspection PyBroadException
         try:
             return f(*args, **kwargs)
         except errors_list:

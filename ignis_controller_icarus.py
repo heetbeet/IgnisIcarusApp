@@ -1,13 +1,18 @@
+import os
+import sys
 from types import SimpleNamespace
+
+from aa_py_core.util import kill_pid
 from win32com.universal import com_error
 
+from datetime import datetime
 import misc
-import sys
 import time
 from device_information import  get_devices_from_book
 from misc import is_nan
 import numpy as np
 import traceback
+
 
 
 def get_harcoded_parameters(wb):
@@ -54,8 +59,6 @@ if __name__ == "__main__":
 
     p = get_harcoded_parameters(wb)
 
-
-    iwrite = misc.inputs_writer_icarus()
     prev = -9999999
     prev_save = -9999999
 
@@ -64,47 +67,53 @@ if __name__ == "__main__":
     last_success = np.inf
     last_update = None
 
-    line_number = devices[0].start_row_no
+    line_number = misc.force_int(devices[0].line.start_row_no)
     for i in range(line_number, 60000):
         if not inputs_sheet.Range(f'A{i}').value:
-            line_number += i
             break
-
-    for i in range(np.inf):
-
-        update = outputs_sheet.Range('B3').Value
-        if update != last_update:
-            values_to_write = update_write_values(wb,devices)
-
-        for device, val_dict  in zip(devices, values_to_write):
-            for register, value in val_dict.items():
-                if isinstance(value, list):
-                    device.write_bits(value, register)
-
-                else:
-                    device.write(value, register)
+        line_number += 1
 
 
-        if(time.time() - prev > p.reading_interval):
-            _prev = time.time()
+    try:
+        for i in range(int(1e16)):
 
-            for device in devices:
-                device.output_to_excel(inputs_sheet, line_number)
+            update = outputs_sheet.Range('B3').Value
+            if update != last_update:
+                values_to_write = update_write_values(wb,devices)
 
-            line_number += 1
+                for device, val_dict  in zip(devices, values_to_write):
+                    for register, value in val_dict.items():
+                        if not isinstance(value, list):
+                            device.write(value, register)
 
-            prev = _prev
+            for device, val_dict in zip(devices, values_to_write):
+                for register, value in val_dict.items():
+                    if isinstance(value, list):
+                        device.write_bits(value, register)
+
+            if(time.time() - prev > p.reading_interval):
+                _prev = time.time()
+
+                for device in devices:
+                    device.output_to_excel(inputs_sheet, line_number)
+
+                inputs_sheet.Range(f"A{line_number}").value = str(datetime.now())
+
+                line_number += 1
+
+                prev = _prev
 
 
 
-        if(time.time() - prev_save > 60*3):
-            prev_save = time.time()
-            wb.Save()
+            if(time.time() - prev_save > 60*3):
+                prev_save = time.time()
+                wb.Save()
 
 
-        if (i+1)%10 ==0:
-            print("y", end='\n' if i%600==0 else '', flush=True)
+            if (i+1)%10 ==0:
+                print("y", end='\n' if i%600==0 else '', flush=True)
 
-        last_success = time.time()
-
-
+            last_success = time.time()
+    except:
+        traceback.print_exc()
+        kill_pid(os.getpid())
