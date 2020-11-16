@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import time
 from contextlib import suppress
 import os
@@ -238,3 +240,15 @@ def is_nan(val):
             return True
         else:
             return False
+
+
+def exit_after_n_seconds(n=1):
+    subprocess.Popen([
+        sys.executable, "-c",
+             f"import time;"
+             f"time.sleep({n});"
+             f"from aa_py_core.util import kill_pid;"
+             f"kill_pid({os.getpid()})"
+        ],
+        start_new_session=True
+    )

@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from types import SimpleNamespace
 
@@ -12,7 +13,6 @@ from device_information import  get_devices_from_book
 from misc import is_nan
 import numpy as np
 import traceback
-
 
 
 def get_harcoded_parameters(wb):
@@ -116,4 +116,4 @@ if __name__ == "__main__":
             last_success = time.time()
     except:
         traceback.print_exc()
-        kill_pid(os.getpid())
+        misc.exit_after_n_seconds(0.5)
