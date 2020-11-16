@@ -62,8 +62,11 @@ class DeviceInfo:
             def do_read():
                 # Reading a unsigned int normally
                 if self.line.datatype == 'uint':
-                    values = self.device.read_registers(self.line.start_register,
-                                                        self.line.no_of_registers)
+                    first = self.line.start_register
+                    last = self.line.start_register + self.line.no_of_registers
+                    values = []
+                    for i in range(first, last, 8):
+                        values.extend(self.device.read_registers(i, min(i+8, last)-i))
                     return values
 
                 # Reading a unsigned int as a list of bits
