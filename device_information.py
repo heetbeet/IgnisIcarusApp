@@ -17,7 +17,7 @@ from win32com.client import CDispatch
 
 __dirpath__ = Path(globals().get("__file__", "./_")).absolute().parent
 
-from misc import namify, force_int, str2bits, timeStrober, bits2int, try_n, is_nan
+from misc import namify, force_int, str2bits, TimeStrober, bits2int, try_n, is_nan
 from scale_device import ScaleDevice
 
 
@@ -87,7 +87,7 @@ class DeviceInfo:
     def write_bits(self,
                    strobe_settings: List[str],
                    register: int):
-        strobes = [timeStrober(s) for s in strobe_settings]
+        strobes = [TimeStrober(s) for s in strobe_settings]
         int_value = bits2int([s.is_on() for s in strobes][::-1])
 
         try_n(
@@ -103,6 +103,7 @@ class DeviceInfo:
             lambda: self.device.write_register(register, value),
             tries=4
         )
+
 
     def output_to_excel(self, sheet, line_number):
         if (vals := self.read()) is not None:

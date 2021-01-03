@@ -13,6 +13,7 @@ from win32com.universal import com_error
 
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
+col2num = {j: i for i,j in enumerate(num2col)}
 
 numeric = set("1234567890")
 alphanumeric = set("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -191,7 +192,7 @@ def bits2int(bits):
     return out_int
 
 
-class timeStrober:
+class TimeStrober:
     def __init__(self, inpstr):
         self.set_timings(inpstr)
     
