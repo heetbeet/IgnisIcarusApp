@@ -195,12 +195,16 @@ def bits2int(bits):
 class TimeStrober:
     def __init__(self, inpstr):
         self.set_timings(inpstr)
-    
+
+
     def set_timings(self, inpstr):
+        self.as_absolute_value = None
+
         try:
             inpstr*1.0
         except: pass
         else:
+            self.as_absolute_value = inpstr
             inpstr = 'on' if inpstr else 'off'
             
         inpstr = inpstr.lower().strip()
@@ -213,6 +217,7 @@ class TimeStrober:
                                          float(inpstr[1:].split(',')[1].strip()) )
             if self.pperiod == 0:
                 self.pperiod += 0.05
+
         elif inpstr == 'on':
             self.pperiod, self.pwidth = time.time(), time.time()
 
@@ -221,8 +226,12 @@ class TimeStrober:
 
         else:
             raise('Error timestrobe inputs.')
+
         
-    def is_on(self):
+    def get_value(self):
+        if self.as_absolute_value is not None:
+            return self.as_absolute_value
+
         now = time.time()
         if now - int(now/self.pperiod)*self.pperiod < self.pwidth:
             return True

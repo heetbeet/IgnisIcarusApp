@@ -42,10 +42,10 @@ def update_write_values(wb, devices):
                 except com_error:
                     values = misc.get_named_range(wb, source_val).value
 
-                if isinstance(values, tuple):
-                    values_i[dest_val] = list(values[0])
+                if isinstance(values, tuple) or isinstance(values, list):
+                    values_i[dest_val] = [misc.TimeStrober(i) for i in values[0]]
                 else:
-                    values_i[dest_val] = misc.force_int(values)
+                    values_i[dest_val] = misc.TimeStrober(values)
 
         devices_mapping.append(values_i)
 
@@ -131,6 +131,8 @@ if __name__ == "__main__":
                 for register, value in val_dict.items():
                     if isinstance(value, list):
                         device.write_bits(value, register)
+                    else:
+                        device.write(value.get_value(), register)
 
             if(time.time() - prev > p.reading_interval):
                 _prev = time.time()

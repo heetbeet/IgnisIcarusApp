@@ -85,10 +85,10 @@ class DeviceInfo:
             return try_n(do_read, tries=4)
 
     def write_bits(self,
-                   strobe_settings: List[str],
+                   strobes: List[TimeStrober],
                    register: int):
-        strobes = [TimeStrober(s) for s in strobe_settings]
-        int_value = bits2int([s.is_on() for s in strobes][::-1])
+        strobes = [s if not isinstance(s, TimeStrober) else s.get_value() for s in strobes]
+        int_value = bits2int(strobes[::-1])
 
         try_n(
             lambda: self.device.write_register(register, int_value),
