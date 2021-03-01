@@ -13,6 +13,7 @@ from win32com.universal import com_error
 
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
+col2num = {j: i for i,j in enumerate(num2col)}
 
 numeric = set("1234567890")
 alphanumeric = set("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -191,15 +192,19 @@ def bits2int(bits):
     return out_int
 
 
-class timeStrober:
+class TimeStrober:
     def __init__(self, inpstr):
         self.set_timings(inpstr)
-    
+
+
     def set_timings(self, inpstr):
+        self.as_absolute_value = None
+
         try:
             inpstr*1.0
         except: pass
         else:
+            self.as_absolute_value = inpstr
             inpstr = 'on' if inpstr else 'off'
             
         inpstr = inpstr.lower().strip()
@@ -212,6 +217,7 @@ class timeStrober:
                                          float(inpstr[1:].split(',')[1].strip()) )
             if self.pperiod == 0:
                 self.pperiod += 0.05
+
         elif inpstr == 'on':
             self.pperiod, self.pwidth = time.time(), time.time()
 
@@ -220,8 +226,12 @@ class timeStrober:
 
         else:
             raise('Error timestrobe inputs.')
+
         
-    def is_on(self):
+    def get_value(self):
+        if self.as_absolute_value is not None:
+            return self.as_absolute_value
+
         now = time.time()
         if now - int(now/self.pperiod)*self.pperiod < self.pwidth:
             return True
