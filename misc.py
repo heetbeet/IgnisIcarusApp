@@ -120,7 +120,7 @@ def spread_iterator():
             continue
 
         try:
-            book.Sheets(1) #Object is a book with sheets
+            book.Sheets(1) # Object is a book with sheets
         except:
             continue
             
@@ -133,7 +133,7 @@ def get_ignis_spreadsheet():
     for bookname, book in spread_iterator():
         print('Test workbook: ', bookname)
 
-        inputs  = [i for i in book.Sheets if i.Name.lower() == 'inputs']
+        inputs = [i for i in book.Sheets if i.Name.lower() == 'inputs']
         outputs = [i for i in book.Sheets if i.Name.lower() == 'outputs']
 
         if len(inputs) and len(outputs):

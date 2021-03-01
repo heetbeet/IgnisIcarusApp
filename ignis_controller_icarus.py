@@ -1,8 +1,9 @@
 import os
 import subprocess
 import sys
+import xlwings as xw
 from types import SimpleNamespace
-
+from pathlib import Path
 from aa_py_core.util import kill_pid
 from win32com.universal import com_error
 
@@ -17,7 +18,7 @@ import traceback
 
 def get_harcoded_parameters(wb):
     return SimpleNamespace(
-        reading_interval =  misc.force_int(wb.Sheets['Parameters'].Range("reading_interval").value),
+        reading_interval =  misc.force_int(wb.Sheets['Parameters'].Range("reading_interval").Value),
     )
 
 def update_write_values(wb, devices):
@@ -38,9 +39,9 @@ def update_write_values(wb, devices):
 
                 # If it is a named range, search everywhere, if it
                 try:
-                    values = wb.Sheets['Outputs'].Range(source_val).value
+                    values = wb.Sheets['Outputs'].Range(source_val).Value
                 except com_error:
-                    values = misc.get_named_range(wb, source_val).value
+                    values = misc.get_named_range(wb, source_val).Value
 
                 if isinstance(values, tuple):
                     values_i[dest_val] = list(values[0])
@@ -53,9 +54,10 @@ def update_write_values(wb, devices):
 
 if __name__ == "__main__":
 
-
     wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
-    devices = get_devices_from_book(wb)
+
+    xwbook = xw.books(wb.Name)
+    devices = get_devices_from_book(xwbook)
 
     p = get_harcoded_parameters(wb)
 
@@ -69,7 +71,7 @@ if __name__ == "__main__":
 
     line_number = misc.force_int(devices[0].line.start_row_no)
     for i in range(line_number, 60000):
-        if not inputs_sheet.Range(f'A{i}').value:
+        if not inputs_sheet.Range(f'A{i}').Value:
             break
         line_number += 1
 
@@ -97,7 +99,7 @@ if __name__ == "__main__":
                 for device in devices:
                     device.output_to_excel(inputs_sheet, line_number)
 
-                inputs_sheet.Range(f"A{line_number}").value = str(datetime.now())
+                inputs_sheet.Range(f"A{line_number}").Value = str(datetime.now())
 
                 line_number += 1
 

@@ -25,7 +25,7 @@ def wb_to_xw(wb):
     """
     Convert a CDispatch workbook object into an xlwings workbook object
     """
-    return xw.books[wb.name]
+    return xw.books(wb.name)
 
 
 def get_table_as_df(book: Union[xw.Book, str, CDispatch],
@@ -112,7 +112,7 @@ class DeviceInfo:
 
             def do_output():
                 range = sheet.Range(dump_cols)
-                range.value = vals[:len(range)]
+                range.Value = vals[:len(range)]
 
 
             try_n(
@@ -136,8 +136,11 @@ for key, val in list(globals().items()):
 def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
     """
     >>> import misc
-    >>> wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
-    >>> devices = get_devices_from_book(wb)
+    >>> import xlwings as xw
+    >>> wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet() # doctest: +ELLIPSIS
+    T...
+    Y...
+    >>> devices = get_devices_from_book(xw.books(wb.Name))
     """
 
     devices = []
