@@ -3,6 +3,6 @@ xlwings
 minimalmodbus
 ordered-set
 locate
-serial
+pyserial==3.4
 git+ssh://git@github.com/AutoActuary/aa-py-core.git@1.0.0#egg=aa-py-core
 
