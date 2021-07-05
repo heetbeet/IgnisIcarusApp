@@ -14,34 +14,53 @@ from device_information import  get_devices_from_book
 from misc import is_nan
 import numpy as np
 import traceback
+import crccheck
+
+modb = crccheck.crc.CrcModbus()
+
+
+def relay_crc(x):
+    return modb.calcbytes(x)[::-1]
 
 
 def get_harcoded_parameters(wb):
     return SimpleNamespace(
-        reading_interval =  misc.force_int(wb.Sheets['Parameters'].Range("reading_interval").Value),
+        reading_interval = misc.force_int(wb.Sheets['Parameters'].Range("reading_interval").Value),
     )
+
 
 def update_write_values(wb, devices):
     '''
     Don't overtax this function
     '''
+
+    # If it is a named range, search everywhere, if it
+    def get_value_from_cell_reference(source_val):
+        try:
+            return wb.Sheets['Outputs'].Range(source_val).Value
+        except com_error:
+            return misc.get_named_range(wb, source_val).Value
+
     devices_mapping = []
     for d in devices:
         values_i = {}
-        for i in range(1,1+8):
+        for i in range(1, 1+8):
             source = f'source_{i}'
             dest = f'write_{i}'
 
-            if (not is_nan(source_val := d.line.__dict__[source]) and
-                not is_nan(dest_val := d.line.__dict__[dest])):
+            source_link = d.line.__dict__[source]
+            if not is_nan(source_link):
+                source_val = get_value_from_cell_reference(source_link)
+
+            dest_val = d.line.__dict__[dest]
+
+            if str(source_val).lower().startswith("0x"):
+                values_i[i] = source_val
+
+            elif (not is_nan(source_val) and not is_nan(dest_val)):
 
                 dest_val = misc.force_int(dest_val)
-
-                # If it is a named range, search everywhere, if it
-                try:
-                    values = wb.Sheets['Outputs'].Range(source_val).Value
-                except com_error:
-                    values = misc.get_named_range(wb, source_val).Value
+                values = get_value_from_cell_reference(source_val)
 
                 if isinstance(values, tuple) or isinstance(values, list):
                     values_i[dest_val] = [misc.TimeStrober(i) for i in values[0]]
@@ -98,6 +117,7 @@ def dump_dict_to_excel(dump_dict, sheet, line_number):
 
     misc.try_n(do_output, tries=50)
 
+
 if __name__ == "__main__":
 
 
@@ -122,7 +142,6 @@ if __name__ == "__main__":
             break
         line_number += 1
 
-
     try:
         for i in range(int(1e16)):
 
@@ -134,6 +153,10 @@ if __name__ == "__main__":
                 for register, value in val_dict.items():
                     if isinstance(value, list):
                         device.write_bits(value, register)
+                    elif str(value).lower().startswith("0x"):
+                        device.device.serial.write((b := bytes.fromhex(value[2:])
+                                                    )+relay_crc(b))
+
                     else:
                         device.write(value.get_value(), register)
 

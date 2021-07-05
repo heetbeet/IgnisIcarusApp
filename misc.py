@@ -225,7 +225,8 @@ class TimeStrober:
             self.pperiod, self.pwidth = time.time(), 0
 
         else:
-            raise('Error timestrobe inputs.')
+            raise ValueError('Error timestrobe inputs expected: '
+                             f'1/0/True/False/"on"/"off"/"t<seconds>"/"s<period>,<pulsewidth>", got {inpstr}.')
 
         
     def get_value(self):
