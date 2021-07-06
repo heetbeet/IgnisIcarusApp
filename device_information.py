@@ -188,7 +188,9 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
 
                 for f in (dev.read_bits, dev.read_string):
                     try:
-                        f(line.start_register, 1)
+                        if line.device_name.lower() != "relay time set":
+                            f(line.start_register, 1)
+
                         found_it = True
 
                         devices.append(
