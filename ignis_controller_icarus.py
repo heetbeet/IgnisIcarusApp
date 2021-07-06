@@ -48,9 +48,9 @@ def update_write_values(wb, devices):
             source = f'source_{i}'
             dest = f'write_{i}'
 
-            source_link = d.line.__dict__[source]
-            if not is_nan(source_link):
-                source_val = get_value_from_cell_reference(source_link)
+            source_val = lnk = d.line.__dict__[source]
+            if not is_nan(lnk):
+                source_val = get_value_from_cell_reference(lnk)
 
             dest_val = d.line.__dict__[dest]
 
@@ -120,7 +120,6 @@ def dump_dict_to_excel(dump_dict, sheet, line_number):
 
 if __name__ == "__main__":
 
-
     wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
 
     xwbook = xw.books(wb.Name)
@@ -130,7 +129,6 @@ if __name__ == "__main__":
 
     prev = -9999999
     prev_save = -9999999
-
 
     print('Start')
     last_success = np.inf
@@ -149,19 +147,25 @@ if __name__ == "__main__":
             if update != last_update:
                 values_to_write = update_write_values(wb, devices)
 
+            trigger_only_after_reading_interval = []
+
             for device, val_dict in zip(devices, values_to_write):
                 for register, value in val_dict.items():
                     if isinstance(value, list):
                         device.write_bits(value, register)
                     elif str(value).lower().startswith("0x"):
-                        device.device.serial.write((b := bytes.fromhex(value[2:])
-                                                    )+relay_crc(b))
-
+                        trigger_only_after_reading_interval.append(
+                            (lambda: (device.device.serial.write(msg:=(b:=bytes.fromhex(value[2:]))+relay_crc(b)),
+                                      time.sleep(0.0001))))
                     else:
                         device.write(value.get_value(), register)
 
             if(time.time() - prev > p.reading_interval):
                 _prev = time.time()
+
+                for f in trigger_only_after_reading_interval:
+                    f()
+
 
                 dump_dict = {}
                 for device in devices:
