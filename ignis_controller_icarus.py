@@ -155,8 +155,9 @@ if __name__ == "__main__":
                         device.write_bits(value, register)
                     elif str(value).lower().startswith("0x"):
                         trigger_only_after_reading_interval.append(
-                            (lambda: (device.device.serial.write(msg:=(b:=bytes.fromhex(value[2:]))+relay_crc(b)),
-                                      time.sleep(0.0001))))
+                            (lambda device, value: # To form a closure over device and value
+                                (lambda: (device.device.serial.write(msg:=(b:=bytes.fromhex(value[2:]))+relay_crc(b)),
+                                          time.sleep(0.05))))(device, value))
                     else:
                         device.write(value.get_value(), register)
 
