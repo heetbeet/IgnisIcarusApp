@@ -65,7 +65,7 @@ try:
             if ~np.any(read_ok):
                 raise OSError("One instrument can't be read by do_readings(self, ...).")
             
-            if (i+1)%10 ==0:
+            if i%10 ==0: 
                 print("y", end='\n' if i%600==0 else '', flush=True)
                 
             last_success = time.time()

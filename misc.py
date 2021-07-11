@@ -1,50 +1,16 @@
-#%%
 import time
 from datetime import datetime
 import os
-from types import SimpleNamespace
-
-import minimalmodbus
 import pythoncom
 import win32api
 import win32com.client
-import traceback
 
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
 
-
 def is_interactive():
     import __main__ as main
     return not hasattr(main, '__file__')
-
-
-def try_thrice(f, *args, errors_list=None, **kwargs):
-    """
-    Try to run a function three times before giving up
-
-    >>> count = {'i':0}
-    >>> # noinspection PyUnresolvedReferences
-    ... def func():
-    ...     count['i'] += 1
-    ...     assert count['i'] >= 3
-
-    >>> try_thrice(func)
-
-    """
-    if errors_list is None:
-        errors_list = Exception
-    else:
-        errors_list = tuple(errors_list)
-
-    for i in range(2):
-        # noinspection PyBroadException
-        try:
-            return f(*args, **kwargs)
-        except errors_list:
-            time.sleep(0.05)
-
-    return f(*args, **kwargs)
 
 
 def spread_iterator():
@@ -94,16 +60,6 @@ def get_spreadsheet_by_name(spreadname):
                 fname = fext.join(fname.split(fext)[:-1])
         if fname == spreadname.lower():
             return book
-
-
-def force_int(s):
-    s = str(s)
-    if "." in s:
-        val = float(s)
-    else:
-        val = int(s, 0)
-
-    return int(val)
 
 
 def str2bits(s):
@@ -178,12 +134,9 @@ def get_instruments(comname, nr_of_devices):
     
     return instances
 
-def write_to_inst(ins, value, reg=320):
-    if isinstance(value, list) or isinstance(value, tuple):
-        value = bits2int(value[::-1])
-
+def write_to_inst(ins, bits):
     try:
-        ins.write_register(reg, value)
+        ins.write_register(320, bits2int(bits[::-1]))
         return True
     except OSError:
         return False
@@ -264,63 +217,4 @@ class inputs_writer:
         self.inputs_sheet.Range(f'{col2}{row}').Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
         self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
         
-        return True
-
-
-class inputs_writer_icarus:
-    def __init__(self):
-        self.curr_line = 6
-        self.sensitivity_col = None
-        self.results_sheet = None
-        self.inputs_sheet = None
-
-    def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4):
-        if self.sensitivity_col is None:
-            self.inputs_sheet = [i for i in wb.Sheets if i.Name.lower() == 'inputs'][0]
-            self.results_sheet = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
-            for i, val in enumerate(self.results_sheet.Range("5:5").Value[0]):
-                if str(val).lower().strip() == 'sensitivity':
-                    self.sensitivity_col = num2col[i]
-
-        for i in range(self.curr_line, 60000):
-            if not inputs_sheet.Range('A' + str(i)).Value:
-                self.curr_line = i
-                break
-
-        def _read():
-            none_line = [None] * 8
-
-            data_date = [str(datetime.now())]  # 0
-            data2 = ins2.read_registers(512, 8) if ins2 is not None else none_line  # 1-8
-            data3 = ins3.read_registers(512, 8) if ins3 is not None else none_line  # 9-16
-            data4 = ins4.read_registers(1, 8) if ins4 is not None else none_line  # 17-24
-            data1 = str2bits(ins1.read_string(320, 1))[::-1][:8] if ins1 is not None else none_line  # 25-32
-            data = (data_date + data2 + data3 + data4)
-
-            return SimpleNamespace(
-                data1=data1,
-                data2=data2,
-                data3=data3,
-                data4=data4,
-                data=data
-            )
-
-        try:
-            p = try_thrice(_read, errors_list=[minimalmodbus.NoResponseError])
-        except Exception as e:
-            traceback.print_exc()
-            return False
-
-        # Some excel conversions and lookups
-        alph = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        xl = alph + [i+j for i in alph for j in alph]
-
-        row = self.curr_line
-
-        col0 = xl[0]  # datalines from the instuments
-        col1 = xl[len(p.data) - 1]
-
-        self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = p.data
-        self.inputs_sheet.Range(f'AI{row}:AP{row}').Value = p.data1
-
         return True
