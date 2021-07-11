@@ -157,7 +157,8 @@ if __name__ == "__main__":
                         trigger_only_after_reading_interval.append(
                             (lambda device, value: # To form a closure over device and value
                                 (lambda: (device.device.serial.write(msg:=(b:=bytes.fromhex(value[2:]))+relay_crc(b)),
-                                          time.sleep(0.05))))(device, value))
+                                          time.sleep(0.1)
+                                          )))(device, value))
                     else:
                         device.write(value.get_value(), register)
 

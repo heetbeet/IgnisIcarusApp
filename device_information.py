@@ -188,9 +188,12 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
 
                 for f in (dev.read_bits, dev.read_string):
                     try:
-                        if line.device_name.lower() != "relay time set":
+                        if line.device_name.lower() == "relay time set":
+                            if f"com{int(line.start_register)}" != com.lower():
+                                raise minimalmodbus.IllegalRequestError()
+                        else: 
                             f(line.start_register, 1)
-
+                            
                         found_it = True
 
                         devices.append(
