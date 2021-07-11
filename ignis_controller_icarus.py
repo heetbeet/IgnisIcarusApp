@@ -60,7 +60,7 @@ def update_write_values(wb, devices):
             elif (not is_nan(source_val) and not is_nan(dest_val)):
 
                 dest_val = misc.force_int(dest_val)
-                values = get_value_from_cell_reference(source_val)
+                values = source_val
 
                 if isinstance(values, tuple) or isinstance(values, list):
                     values_i[dest_val] = [misc.TimeStrober(i) for i in values[0]]
