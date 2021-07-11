@@ -1,8 +1,9 @@
-
-''' >NUL  2>NUL
 @echo off
+set "PYTHON=%~dp0\bin\python\python.exe"
+if not exist "%PYTHON%" set "PYTHON=python"
+
+echo using %PYTHON%
 cd /d %~dp0
 :loop
-"%~dp0\bin\python\python.exe" ignis_controller.py %*
+"%PYTHON%" ignis_controller.py %*
 goto loop
-'''
