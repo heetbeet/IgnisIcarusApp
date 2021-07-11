@@ -240,8 +240,9 @@ class inputs_writer:
                 ins5.read_registers(512, 8)+
                 ins5.read_registers(520, 8)+
                 str2bits(ins6.read_string(320,1))[::-1][:8]+
-                ins7.read_registers(512, 8)+
-                ins7.read_registers(520, 8)
+                [None]*16
+                #ins7.read_registers(512, 8)+
+                #ins7.read_registers(520, 8)
             )
         except:
             return False
