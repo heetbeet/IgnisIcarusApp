@@ -3,6 +3,6 @@
 @echo off
 cd /d %~dp0
 :loop
-python ignis_controller.py %*
+"%~dp0\bin\python\python.exe" ignis_controller.py %*
 goto loop
 '''
