@@ -1,8 +1,8 @@
 pyserial==3.4
 pywin32==300
+minimalmodbus==0.7
 pydicti
 xlwings
-minimalmodbus
 ordered-set
 locate
 numpy
