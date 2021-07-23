@@ -190,10 +190,11 @@ class inputs_writer:
                 str2bits(ins1.read_string(320,1))[::-1][:8]+
                 ins4.read_registers(512, 8)+
                 ins4.read_registers(520, 8)+
-                ins5.read_registers(512, 8)+
-                ins5.read_registers(520, 8)+
+                ([0]*16)+
+                #ins5.read_registers(512, 8)+
+                #ins5.read_registers(520, 8)+
                 str2bits(ins6.read_string(320,1))[::-1][:8]+
-                [None]*16
+                ([None]*16)
                 #ins7.read_registers(512, 8)+
                 #ins7.read_registers(520, 8)
             )
@@ -214,7 +215,7 @@ class inputs_writer:
         col4 = xl[len(data)+2]
         
         self.inputs_sheet.Range(f'{col3}{row}:{col4}{row}').Value = get_mode_limit(wb)
-        self.inputs_sheet.Range(f'{col2}{row}').Value = self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1))
+        self.inputs_sheet.Range(f'{col2}{row}').Value = 0 #self.results_sheet.Range('%s%d'%(self.sensitivity_col, self.curr_line-1)).Value
         self.inputs_sheet.Range(f'{col0}{row}:{col1}{row}').Value = data
         
         return True

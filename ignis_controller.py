@@ -3,7 +3,7 @@ import time
 import importlib; importlib.reload(misc)
 from pywintypes import com_error
 import numpy as np
-
+import traceback
 
 # In[4]:
 
@@ -72,6 +72,7 @@ try:
             
         #Give alarm if the excel sheet is blocked
         except com_error:
+            print(traceback.format_exc())
             if i%10 ==0:
                 print('x', end='\n' if i%600==0 else '', flush=True)
                     
