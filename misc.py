@@ -4,6 +4,10 @@ import os
 import pythoncom
 import win32api
 import win32com.client
+import minimalmodbus
+
+minimalmodbus.BAUDRATE = 9600
+minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
 
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
@@ -38,6 +42,7 @@ def spread_iterator():
 
         yield bookname, book
 
+
 def get_ignis_spreadsheet():
     for bookname, book in spread_iterator():
         print('Test workbook: ', bookname)
@@ -48,7 +53,8 @@ def get_ignis_spreadsheet():
         if len(inputs) and len(outputs):
             print('Yes -->', bookname)
             return book, inputs[0], outputs[0]
-        
+
+
 def get_spreadsheet_by_name(spreadname):
     for bookname, book in spread_iterator():
         print('Test workbook: ', bookname)
@@ -70,6 +76,7 @@ def str2bits(s):
         result.extend([int(b) for b in bits])
     return result
 
+
 def bits2str(bits):
     bitgroups = [bits[i:i+8] for i in range(0,len(bits),8)]
     int_list = []
@@ -80,11 +87,13 @@ def bits2str(bits):
     str_out = ''.join([chr(i) for i in int_list])
     return str_out
 
+
 def bits2int(bits):
     out_int = 0
     for i, val in enumerate(bits[::-1]):
         out_int += (2**(i))*bool(val)
     return out_int
+
 
 class timeStrober:
     def __init__(self, inpstr):
@@ -123,16 +132,18 @@ class timeStrober:
         else:
             return False
 
-def get_instruments(comname, nr_of_devices):
-    import minimalmodbus
 
-    minimalmodbus.BAUDRATE = 9600
-    minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
+def get_instruments(comname, nr_of_devices):
     instances = []
     for i in range(1, nr_of_devices+1):
         instances.append(minimalmodbus.Instrument(comname, i))
     
     return instances
+
+
+def get_instrument(comname, device):
+    return minimalmodbus.Instrument(comname, device)
+
 
 def write_to_inst(ins, bits):
     try:
@@ -142,10 +153,11 @@ def write_to_inst(ins, bits):
         return False
     
 def get_mode_limit(wb):
-    results_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
-    compiled_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'compiled data'][0]
+    results_sheet = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
+    compiled_sheet = [i for i in wb.Sheets if i.Name.lower() == 'compiled data'][0]
     return [results_sheet.Range("AW3").Value,
             compiled_sheet.Range("CX4").Value]
+
 
 class test_writer:
     def __init__(self):
@@ -168,7 +180,7 @@ class inputs_writer:
         self.results_sheet = None
         self.inputs_sheet = None
     
-    def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6, ins7):
+    def do_readings(self, wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6):
         if self.sensitivity_col is None:
             self.inputs_sheet   = [i for i in wb.Sheets if i.Name.lower() == 'inputs' ][0]
             self.results_sheet  = [i for i in wb.Sheets if i.Name.lower() == 'results'][0]
@@ -182,21 +194,15 @@ class inputs_writer:
                 break
         try:        
             data =(
-                [str(datetime.now())]+
-                ins2.read_registers(512, 8)+
-                ins2.read_registers(520, 8)+
-                ins3.read_registers(512, 8)+
-                ins3.read_registers(520, 8)+
-                str2bits(ins1.read_string(320,1))[::-1][:8]+
-                ins4.read_registers(512, 8)+
-                ins4.read_registers(520, 8)+
-                ([0]*16)+
-                #ins5.read_registers(512, 8)+
-                #ins5.read_registers(520, 8)+
-                str2bits(ins6.read_string(320,1))[::-1][:8]+
-                ([None]*16)
-                #ins7.read_registers(512, 8)+
-                #ins7.read_registers(520, 8)
+                [str(datetime.now())] +
+                ([0]*16 if ins2 is None else ins2.read_registers(512, 8) + ins2.read_registers(520, 8)) +
+                ([0]*16 if ins3 is None else ins3.read_registers(512, 8) + ins3.read_registers(520, 8)) +
+                # noinspection PyTypeChecker
+                ([0]*8 if ins1 is None else str2bits(ins1.read_string(320, 1))[::-1][:8]) +
+                ([0]*16 if ins4 is None else ins4.read_registers(512, 8) + ins4.read_registers(520, 8)) +
+                ([0]*16 if ins5 is None else ins5.read_registers(512, 8) + ins5.read_registers(520, 8)) +
+                ([0]*8 if ins6 is None else str2bits(ins6.read_string(320, 1))[::-1][:8]) +
+                [None]*16
             )
         except:
             return False

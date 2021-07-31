@@ -5,24 +5,32 @@ from pywintypes import com_error
 import numpy as np
 import traceback
 
-# In[4]:
-
 
 wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
 
-
-# In[ ]:
+try:
+    comms_sheet = [i for i in wb.Sheets if i.Name.lower() == 'comms'][0]
+except IndexError:
+    raise ValueError("Spreadsheet doesn't have sheet named 'comms'")
 
 
 com_val = "COM%d"%(outputs_sheet.Range('B5').Value)
-ins1, ins2, ins3, ins4, ins5, ins6, ins7 = misc.get_instruments(com_val, 7) #add comm number
+
+ins1, ins2, ins3, ins4, ins5, ins6, ins7 = [None]*7
+for i in range(1, 7+1):
+    if comms_sheet.Range(f"A{i+4}").Value:
+        exec(f"ins{i} = misc.get_instrument(com_val, i)", globals())
+    else:
+        print(f"Not reading instrument {i}")
+
+
 inst = misc.inputs_writer()
 prev = -9999999
 prev_save = -9999999
 
-ins1_ok = []
-ins6_ok = []
-read_ok = []
+ins1_ok = [True]
+ins6_ok = [True]
+read_ok = [True]
 
 print('Start')
 last_success = np.inf
@@ -43,13 +51,15 @@ try:
                 strobe_settings = outputs_sheet.Range('M3:T3').Value[0]
                 strobes2 = [misc.timeStrober(s) for s in strobe_settings]
                 last_update = update
-            
-            ins1_ok = ins1_ok[-10:]+[misc.write_to_inst(ins1, [s.is_on() for s in strobes1])]
-            ins6_ok = ins6_ok[-10:]+[misc.write_to_inst(ins6, [s.is_on() for s in strobes2])]
+
+            if ins1 is not None:
+                ins1_ok = ins1_ok[-10:]+[misc.write_to_inst(ins1, [s.is_on() for s in strobes1])]
+            if ins6 is not None:
+                ins6_ok = ins6_ok[-10:]+[misc.write_to_inst(ins6, [s.is_on() for s in strobes2])]
             
             if(time.time() - prev > 5):
                 _prev = time.time()
-                read_ok = read_ok[-3:]+[inst.do_readings(wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6, ins7)]
+                read_ok = read_ok[-3:]+[inst.do_readings(wb, inputs_sheet, ins1, ins2, ins3, ins4, ins5, ins6)]
                 
                 if read_ok[-1]:
                     prev = _prev
@@ -79,9 +89,12 @@ try:
             if time.time() - last_success > 10:
                 bits = [s.is_on() for s in strobes1]
                 bits[-2] = round(np.random.rand()) #Overwrite alarm bit
-                
-                misc.write_to_inst(ins1, bits)
-            
+
+                if ins1 is not None:
+                    misc.write_to_inst(ins1, bits)
+                if ins7 is not None:
+                    ins7.write_register(0x0310, int(outputs_sheet.Range("M12").Value))
+
         #except ValueError:
         #    print('\nValueError occured')
 
