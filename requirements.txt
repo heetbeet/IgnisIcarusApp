@@ -1,9 +1,0 @@
-pydicti
-xlwings
-minimalmodbus
-ordered-set
-locate
-pyserial==3.4
-crccheck
-git+ssh://git@github.com/AutoActuary/aa-py-core.git@1.0.0#egg=aa-py-core
-

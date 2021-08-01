@@ -7,21 +7,16 @@ import os
 import numpy as np
 import pythoncom
 import win32com.client
-
+from aa_py_core.processes import kill_pid
 
 from win32com.universal import com_error
 
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
-col2num = {j: i for i,j in enumerate(num2col)}
+col2num = {j: i for i, j in enumerate(num2col)}
 
 numeric = set("1234567890")
 alphanumeric = set("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-
-def is_interactive():
-    import __main__ as main
-    return not hasattr(main, '__file__')
 
 
 def try_n(f, *args, errors_list=None, tries=3, **kwargs):
@@ -142,19 +137,6 @@ def get_ignis_spreadsheet():
             return book, inputs[0], outputs[0]
 
 
-def get_spreadsheet_by_name(spreadname):
-    for bookname, book in spread_iterator():
-        print('Test workbook: ', bookname)
-        fname = os.path.split(bookname)[-1].lower()
-
-        fexts = ['.xls', '.csv', '.txt']
-        for fext in fexts:
-            if fext in fname:
-                fname = fext.join(fname.split(fext)[:-1])
-        if fname == spreadname.lower():
-            return book
-
-
 def force_int(s):
     s = str(s)
     if "." in s:
@@ -228,7 +210,6 @@ class TimeStrober:
             raise ValueError('Error timestrobe inputs expected: '
                              f'1/0/True/False/"on"/"off"/"t<seconds>"/"s<period>,<pulsewidth>", got {inpstr}.')
 
-        
     def get_value(self):
         if self.as_absolute_value is not None:
             return self.as_absolute_value
@@ -254,12 +235,12 @@ def is_nan(val):
 
 
 def exit_after_n_seconds(n=1):
-    subprocess.Popen([
-        sys.executable, "-c",
-             f"import time;"
-             f"time.sleep({n});"
-             f"from aa_py_core.util import kill_pid;"
-             f"kill_pid({os.getpid()})"
+    kill_pid # noqa
+    subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            f"import time; time.sleep({n}); from aa_py_core.processes import kill_pid; kill_pid({os.getpid()})"
         ],
         start_new_session=True
     )
