@@ -6,16 +6,13 @@ from typing import Union, List, Any, get_type_hints
 import minimalmodbus
 minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
 
-from aa_py_core.xl.context import excel
+from aa_py_xl.context import excel
 import pandas as pd
-from pathlib import Path
 import xlwings as xw
-from aa_py_core.xl.tables import LOTable
-from pandas import Series
+from aa_py_xl.tables import LOTable
 from serial import SerialException
 from win32com.client import CDispatch
-
-__dirpath__ = Path(globals().get("__file__", "./_")).absolute().parent
+from locate import this_dir
 
 from misc import namify, force_int, str2bits, TimeStrober, bits2int, try_n, is_nan
 from scale_device import ScaleDevice
@@ -31,13 +28,13 @@ def wb_to_xw(wb):
 def get_table_as_df(book: Union[xw.Book, str, CDispatch],
                     tablename: str) -> pd.DataFrame:
     """
-    >>> with excel(__dirpath__.joinpath('test', 'tables.xlsx'), quiet=True, kill=True) as book:
+    >>> with excel(this_dir().joinpath('../test/tables.xlsx'), quiet=True, kill=True) as book:
     ...      list(get_table_as_df(book, "test_table").columns)
     ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
     """
     if isinstance(book, CDispatch):
-        book =  wb_to_xw(book)
+        book = wb_to_xw(book)
 
     elif isinstance(book, str):
         book = xw.books[book]
@@ -115,10 +112,9 @@ class DeviceInfo:
                 range = sheet.Range(dump_cols)
                 range.Value = vals[:len(range)]
 
-
             try_n(
                 do_output,
-                tries = 50
+                tries=50
             )
 
 

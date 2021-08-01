@@ -5,6 +5,7 @@ import sys
 
 repo_dir = locate.this_dir().parent
 sys.path.insert(0, str(repo_dir))
+sys.path.insert(0, str(repo_dir.joinpath("src")))
 
 
 def load_tests(loader, tests, ignore):
