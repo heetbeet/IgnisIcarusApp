@@ -1,4 +1,6 @@
-import misc; 
+from contextlib import suppress
+
+import misc;
 import time
 import importlib; importlib.reload(misc)
 from pywintypes import com_error
@@ -30,6 +32,7 @@ prev_save = -9999999
 
 ins1_ok = [True]
 ins6_ok = [True]
+ins7_ok = [True]
 read_ok = [True]
 
 print('Start')
@@ -56,6 +59,12 @@ try:
                 ins1_ok = ins1_ok[-10:]+[misc.write_to_inst(ins1, [s.is_on() for s in strobes1])]
             if ins6 is not None:
                 ins6_ok = ins6_ok[-10:]+[misc.write_to_inst(ins6, [s.is_on() for s in strobes2])]
+            if ins7 is not None:
+                try:
+                    ins7.write_register(0x0310, int(outputs_sheet.Range("M12").Value))
+                    ins7_ok = ins7_ok[-10:]+[True]
+                except OSError:
+                    ins7_ok = ins7_ok[-10:]+[False]
             
             if(time.time() - prev > 5):
                 _prev = time.time()
@@ -67,11 +76,11 @@ try:
             if(time.time() - prev_save > 60*3):
                 prev_save = time.time()
                 wb.Save()
-            
-            if ~np.any(ins1_ok): #not even once in 4 times
-                raise OSError("Can't write to instrument 1.")
-            if ~np.any(ins6_ok):
-                raise OSError("Can't write to instrument 6.")
+
+            for oki, oks in zip([1, 6, 7],
+                                [ins1_ok, ins6_ok, ins7_ok]):
+                if ~np.any(oks):
+                    raise OSError(f"Can't write to instrument {oki}.")
             if ~np.any(read_ok):
                 raise OSError("One instrument can't be read by do_readings(self, ...).")
             
@@ -92,8 +101,6 @@ try:
 
                 if ins1 is not None:
                     misc.write_to_inst(ins1, bits)
-                if ins7 is not None:
-                    ins7.write_register(0x0310, int(outputs_sheet.Range("M12").Value))
 
         #except ValueError:
         #    print('\nValueError occured')
