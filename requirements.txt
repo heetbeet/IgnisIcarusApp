@@ -1,5 +1,5 @@
 pyserial==3.4
-pywin32==300
+pywin32==301
 pydicti
 xlwings
 minimalmodbus
