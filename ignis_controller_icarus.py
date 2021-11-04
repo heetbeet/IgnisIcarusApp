@@ -10,7 +10,7 @@ from win32com.universal import com_error
 from datetime import datetime
 import misc
 import time
-from device_information import  get_devices_from_book
+from device_information import get_devices_from_book
 from misc import is_nan
 import numpy as np
 import traceback

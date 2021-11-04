@@ -212,7 +212,7 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
 
     if failures:
 
-        raise ConnectionError(f"Could not read devices: {failures}")
+        raise ConnectionError(f"Could not read devices: {failures}, but did read: {[i.name for i in devices]}")
 
     return devices
 
