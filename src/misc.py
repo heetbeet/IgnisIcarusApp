@@ -3,13 +3,16 @@ import sys
 import time
 from contextlib import suppress
 import os
-
+from textwrap import dedent
 import numpy as np
 import pythoncom
 import win32com.client
-from aa_py_core.processes import kill_pid
+import locate
 
 from win32com.universal import com_error
+
+with locate.prepend_sys_path("../site-packages"):
+    from aa_py_core.processes import kill_pid
 
 alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 num2col = [i for i in alph] + [i+j for i in alph for j in alph]
@@ -236,11 +239,23 @@ def is_nan(val):
 
 def exit_after_n_seconds(n=1):
     kill_pid # noqa
+    sitepack = locate.this_dir().joinpath("site-packages")
+    assert sitepack.is_dir()
+
+    pystr = dedent(f"""\
+        import time;
+        import sys;
+        sys.path.insert(0, r'{sitepack}';
+        time.sleep({n});
+        from aa_py_core.processes import kill_pid;
+        kill_pid({os.getpid()});
+    """).replace("\n", " ")
+
     subprocess.Popen(
         [
             sys.executable,
             "-c",
-            f"import time; time.sleep({n}); from aa_py_core.processes import kill_pid; kill_pid({os.getpid()})"
+            pystr
         ],
         start_new_session=True
     )

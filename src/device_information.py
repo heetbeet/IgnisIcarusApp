@@ -6,16 +6,19 @@ from typing import Union, List, Any, get_type_hints
 import minimalmodbus
 minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
 
-from aa_py_xl.context import excel
 import pandas as pd
 import xlwings as xw
-from aa_py_xl.tables import LOTable
 from serial import SerialException
 from win32com.client import CDispatch
 from locate import this_dir
 
 from misc import namify, force_int, str2bits, TimeStrober, bits2int, try_n, is_nan
 from scale_device import ScaleDevice
+
+import locate
+with locate.prepend_sys_path("../site-packages"):
+    from aa_py_xl.context import excel
+    from aa_py_xl.tables import LOTable
 
 
 def wb_to_xw(wb):

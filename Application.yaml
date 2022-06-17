@@ -1,26 +1,23 @@
-# information for application name and launcher
-Application:
+app-builder: v0.2.4
 
+Application:
   name: Icarus
   asciibanner: scripts/icon/banner.txt
   icon: scripts/icon/Icarus.ico
   installdir: '%localappdata%\Ignis\Icarus'
-
   pause: 1
 
   programdata:
     - [ ./bin, ./bin ]
     - [ ./scripts, ./scripts ]
     - [ ./src, ./src ]
+    - [ ./site-packages, ./site-packages ]
     - [ ./Icarus.exe, ./Icarus.exe ]
 
-  # These are shortcuts from %localappdata%/foo/bar to start-menu
   startmenu:
     - Icarus.exe
 
-# Download Python/R (optional) and their dependencies to be deployed
-Dependencies:
-  deploy-scripts: 71277c6fd1ba634181c78da02dc07aada48e2d60
+dependencies:
   python:
     - pydicti
     - xlwings
@@ -29,5 +26,16 @@ Dependencies:
     - locate
     - pyserial==3.4
     - crccheck
-    - git+ssh://git@github.com/AutoActuary/aa-py-core.git@3.1.2#egg=aa-py-core
-    - git+ssh://git@github.com/AutoActuary/aa-py-xl.git@3.0.0#egg=aa-py-xl
+    
+    # aa-py-core additional dependencies
+    - psutil
+    - numpy
+    - path
+    - pandas
+    - filelock
+
+    # aa-py-xl additional dependencies
+    - openpyxl
+    - parsimonious
+    - pandasql
+    
