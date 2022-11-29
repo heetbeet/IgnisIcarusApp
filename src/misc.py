@@ -16,7 +16,8 @@ import win32con
 import win32file
 import win32api
 
-from bin.python.Lib import shutil, threading
+import shutil
+import threading
 
 with locate.prepend_sys_path("../site-packages"):
     from aa_py_core.processes import kill_pid
