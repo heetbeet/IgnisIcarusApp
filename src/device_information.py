@@ -129,12 +129,12 @@ for key, val in list(globals().items()):
 
 def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
     """
-    >>> import misc
-    >>> import xlwings as xw
-    >>> wb, bookname, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet() # doctest: +ELLIPSIS
-    T...
-    Y...
-    >>> devices = get_devices_from_book(xw.books(wb.Name))
+    #>>> import misc
+    #>>> import xlwings as xw
+    #>>> wb, bookname, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet() # doctest: +ELLIPSIS
+    #T...
+    #Y...
+    #>>> devices = get_devices_from_book(xw.books(wb.Name))
     """
 
     devices = []
