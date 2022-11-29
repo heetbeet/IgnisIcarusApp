@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 import xlwings as xw
 from win32com.universal import com_error
@@ -20,28 +21,30 @@ def relay_crc(x):
 
 def get_harcoded_parameters(wb):
     return SimpleNamespace(
-        reading_interval = misc.force_int(wb.Sheets['Parameters'].Range("reading_interval").Value),
+        reading_interval=misc.force_int(
+            wb.Sheets["Parameters"].Range("reading_interval").Value
+        ),
     )
 
 
 def update_write_values(wb, devices):
-    '''
+    """
     Don't overtax this function
-    '''
+    """
 
     # If it is a named range, search everywhere, if it
     def get_value_from_cell_reference(source_val):
         try:
-            return wb.Sheets['Outputs'].Range(source_val).Value
+            return wb.Sheets["Outputs"].Range(source_val).Value
         except com_error:
             return misc.get_named_range(wb, source_val).Value
 
     devices_mapping = []
     for d in devices:
         values_i = {}
-        for i in range(1, 1+8):
-            source = f'source_{i}'
-            dest = f'write_{i}'
+        for i in range(1, 1 + 8):
+            source = f"source_{i}"
+            dest = f"write_{i}"
 
             source_val = lnk = d.line.__dict__[source]
             if not is_nan(lnk):
@@ -52,7 +55,7 @@ def update_write_values(wb, devices):
             if str(source_val).lower().startswith("0x"):
                 values_i[i] = source_val
 
-            elif (not is_nan(source_val) and not is_nan(dest_val)):
+            elif not is_nan(source_val) and not is_nan(dest_val):
 
                 dest_val = misc.force_int(dest_val)
                 values = source_val
@@ -73,6 +76,7 @@ def dump_dict_to_excel(dump_dict, sheet, line_number):
     minmax = SimpleNamespace(min=0, max=0)
 
     lst = []
+
     def grow_lst(lst, idx):
         while idx >= len(lst):
             lst.append(None)
@@ -100,10 +104,10 @@ def dump_dict_to_excel(dump_dict, sheet, line_number):
             ci, cj = cols.upper().split(":")
             i, j = misc.col2num[ci], misc.col2num[cj]
 
-            for ii in range(i, j+1):
-                add_val_to_list(misc.num2col[ii], vals[ii-i])
+            for ii in range(i, j + 1):
+                add_val_to_list(misc.num2col[ii], vals[ii - i])
 
-    lst_slice = lst[minmax.min:minmax.max+1]
+    lst_slice = lst[minmax.min : minmax.max + 1]
     excel_range = f"{misc.num2col[minmax.min]}{line_number}:{misc.num2col[minmax.max]}{line_number}"
 
     def do_output():
@@ -115,7 +119,7 @@ def dump_dict_to_excel(dump_dict, sheet, line_number):
 
 if __name__ == "__main__":
 
-    wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
+    wb, bookname, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet()
 
     xwbook = xw.books(wb.Name)
     devices = get_devices_from_book(xwbook)
@@ -125,20 +129,20 @@ if __name__ == "__main__":
     prev = -9999999
     prev_save = -9999999
 
-    print('Start')
+    print("Start")
     last_success = np.inf
     last_update = None
 
     line_number = misc.force_int(devices[0].line.start_row_no)
     for i in range(line_number, 60000):
-        if not inputs_sheet.Range(f'A{i}').Value:
+        if not inputs_sheet.Range(f"A{i}").Value:
             break
         line_number += 1
 
     try:
         for i in range(int(1e16)):
 
-            update = outputs_sheet.Range('B3').Value
+            update = outputs_sheet.Range("B3").Value
             if update != last_update:
                 values_to_write = update_write_values(wb, devices)
 
@@ -150,19 +154,26 @@ if __name__ == "__main__":
                         device.write_bits(value, register)
                     elif str(value).lower().startswith("0x"):
                         trigger_only_after_reading_interval.append(
-                            (lambda device, value: # To form a closure over device and value
-                                (lambda: (device.device.serial.write(msg:=(b:=bytes.fromhex(value[2:]))+relay_crc(b)),
-                                          time.sleep(0.1)
-                                          )))(device, value))
+                            (
+                                lambda device, value: (  # To form a closure over device and value
+                                    lambda: (
+                                        device.device.serial.write(
+                                            msg := (b := bytes.fromhex(value[2:]))
+                                            + relay_crc(b)
+                                        ),
+                                        time.sleep(0.1),
+                                    )
+                                )
+                            )(device, value)
+                        )
                     else:
                         device.write(value.get_value(), register)
 
-            if(time.time() - prev > p.reading_interval):
+            if time.time() - prev > p.reading_interval:
                 _prev = time.time()
 
                 for f in trigger_only_after_reading_interval:
                     f()
-
 
                 dump_dict = {}
                 for device in devices:
@@ -174,14 +185,20 @@ if __name__ == "__main__":
 
                 prev = _prev
 
-
-            if(time.time() - prev_save > 60*3):
+            # Save and backup every 3 minutes
+            if time.time() - prev_save > 60 * 3:
                 prev_save = time.time()
                 wb.Save()
 
+                if Path(bookname).exists():
+                    misc.backup_workbook_to_highest_portable_drive(
+                        bookname, threaded=True
+                    )
+                else:
+                    print(f"Workbook does not exist: {bookname}")
 
-            if (i+1)%10 ==0:
-                print("y", end='\n' if i%600==0 else '', flush=True)
+            if (i + 1) % 10 == 0:
+                print("y", end="\n" if i % 600 == 0 else "", flush=True)
 
             last_success = time.time()
     except:

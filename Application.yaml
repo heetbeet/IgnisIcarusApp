@@ -1,4 +1,4 @@
-app-builder: v0.2.4
+app-builder: v0.2.5
 
 Application:
   name: Icarus
@@ -18,7 +18,7 @@ Application:
     - Icarus.exe
 
 dependencies:
-  python:
+  python 3.9:
     - pydicti
     - xlwings
     - minimalmodbus

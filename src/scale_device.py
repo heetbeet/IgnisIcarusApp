@@ -2,6 +2,7 @@ import serial
 import threading
 import time
 
+
 def is_float(s):
     """
     Test if a string can be parsed to a float
@@ -24,19 +25,23 @@ def _find_scale():
     comms = []
     for i in range(10):
         try:
-            ser = serial.Serial(f'COM{i}',
-                                baudrate=9600,
-                                parity=serial.PARITY_NONE,
-                                stopbits=serial.STOPBITS_ONE,
-                                bytesize=serial.EIGHTBITS,
-                                timeout=0.1)
+            ser = serial.Serial(
+                f"COM{i}",
+                baudrate=9600,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                bytesize=serial.EIGHTBITS,
+                timeout=0.1,
+            )
             comms.append(i)
 
-            #read three times to ensure a correct value
-            readings.extend([ser.readline().decode('utf-8').strip() for i in range(3)][-1])
+            # read three times to ensure a correct value
+            readings.extend(
+                [ser.readline().decode("utf-8").strip() for i in range(3)][-1]
+            )
             try:
                 val = float(readings[-1])
-                #print(f"Found scale on COM{i}")
+                # print(f"Found scale on COM{i}")
                 return ser, val
             except:
                 pass
@@ -46,11 +51,17 @@ def _find_scale():
 
     if not readings:
         if not comms:
-            raise ConnectionError(f"Cannot make any RS232 connection to Preciso Scale Tronic.")
+            raise ConnectionError(
+                f"Cannot make any RS232 connection to Preciso Scale Tronic."
+            )
         else:
-            raise ConnectionError(f"Cannot read values from Preciso Scale Tronic (tried COMs {comms}).")
+            raise ConnectionError(
+                f"Cannot read values from Preciso Scale Tronic (tried COMs {comms})."
+            )
     else:
-        raise ConnectionError(f"Cannot read floating point value from Preciso Scale Tronic. Tried COMs {comms}, got values: {' '.join(readings)}")
+        raise ConnectionError(
+            f"Cannot read floating point value from Preciso Scale Tronic. Tried COMs {comms}, got values: {' '.join(readings)}"
+        )
 
 
 class ScaleDevice:
@@ -59,20 +70,24 @@ class ScaleDevice:
     reads values from the serial device, with the last value being accessible through the mass property. If the device
     reads 10 faulty values in a row the process crashes.
     """
+
     def __init__(self):
         self.ser, self._mass = _find_scale()
 
         self._health = True
-        self._backlog = ['0']*10
+        self._backlog = ["0"] * 10
+
         def background_reader():
             try:
-                while(True):
-                    s = self.ser.readline().decode('utf-8').strip()
+                while True:
+                    s = self.ser.readline().decode("utf-8").strip()
                     self.ser.flushInput()
-                    self._backlog = self._backlog[1:]+[s]
+                    self._backlog = self._backlog[1:] + [s]
 
                     if len([i for i in self._backlog if is_float(i)]) == 0:
-                        raise ValueError(f"Scale device is not recieving any float values: {self._backlog}")
+                        raise ValueError(
+                            f"Scale device is not recieving any float values: {self._backlog}"
+                        )
 
                     if is_float(s):
                         self._mass = s
@@ -81,7 +96,6 @@ class ScaleDevice:
 
         self.thread = threading.Thread(target=background_reader)
         self.thread.start()
-
 
     @property
     def mass(self):

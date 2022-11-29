@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import Union, List, Any, get_type_hints
 
 import minimalmodbus
+
 minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
 
 import pandas as pd
@@ -16,6 +17,7 @@ from misc import namify, force_int, str2bits, TimeStrober, bits2int, try_n, is_n
 from scale_device import ScaleDevice
 
 import locate
+
 with locate.prepend_sys_path("../site-packages"):
     from aa_py_xl.context import excel
     from aa_py_xl.tables import LOTable
@@ -28,8 +30,9 @@ def wb_to_xw(wb):
     return xw.books(wb.name)
 
 
-def get_table_as_df(book: Union[xw.Book, str, CDispatch],
-                    tablename: str) -> pd.DataFrame:
+def get_table_as_df(
+    book: Union[xw.Book, str, CDispatch], tablename: str
+) -> pd.DataFrame:
     """
     >>> with excel(this_dir().joinpath('../test/tables.xlsx'), quiet=True, kill=True) as book:
     ...      list(get_table_as_df(book, "test_table").columns)
@@ -61,22 +64,24 @@ class DeviceInfo:
 
             def do_read():
                 # Reading a unsigned int normally
-                if self.line.datatype == 'uint':
+                if self.line.datatype == "uint":
                     first = self.line.start_register
                     last = self.line.start_register + self.line.no_of_registers
                     values = []
                     for i in range(first, last, 8):
-                        values.extend(self.device.read_registers(i, min(i+8, last)-i))
+                        values.extend(
+                            self.device.read_registers(i, min(i + 8, last) - i)
+                        )
                     return values
 
                 # Reading a unsigned int as a list of bits
                 elif self.line.datatype == "char bits":
                     values = []
-                    for i in range(force_int(self.line.start_register),
-                                   force_int(self.line.start_register+self.line.no_of_registers)):
-                        values.extend(
-                            str2bits(self.device.read_string(i, 1))[::-1]
-                        )
+                    for i in range(
+                        force_int(self.line.start_register),
+                        force_int(self.line.start_register + self.line.no_of_registers),
+                    ):
+                        values.extend(str2bits(self.device.read_string(i, 1))[::-1])
                     return values
 
                 else:
@@ -84,60 +89,49 @@ class DeviceInfo:
 
             return try_n(do_read, tries=4)
 
-    def write_bits(self,
-                   strobes: List[TimeStrober],
-                   register: int):
-        strobes = [s if not isinstance(s, TimeStrober) else s.get_value() for s in strobes]
+    def write_bits(self, strobes: List[TimeStrober], register: int):
+        strobes = [
+            s if not isinstance(s, TimeStrober) else s.get_value() for s in strobes
+        ]
         int_value = bits2int(strobes[::-1])
 
-        try_n(
-            lambda: self.device.write_register(register, int_value),
-            tries=4
-        )
+        try_n(lambda: self.device.write_register(register, int_value), tries=4)
 
-    def write(self,
-              value,
-              register):
+    def write(self, value, register):
 
-        try_n(
-            lambda: self.device.write_register(register, value),
-            tries=4
-        )
-
+        try_n(lambda: self.device.write_register(register, value), tries=4)
 
     def output_to_excel(self, sheet, line_number):
         if (vals := self.read()) is not None:
             # Add line number to dump_cols
             dump_cols = self.line.dump_cols
-            dump_cols = ':'.join([f'{i}{line_number}' for i in dump_cols.split(':')])
+            dump_cols = ":".join([f"{i}{line_number}" for i in dump_cols.split(":")])
 
             def do_output():
                 range = sheet.Range(dump_cols)
-                range.Value = vals[:len(range)]
+                range.Value = vals[: len(range)]
 
-            try_n(
-                do_output,
-                tries=50
-            )
+            try_n(do_output, tries=50)
 
 
 class DeviceInfoScale(DeviceInfo):
     device: ScaleDevice
+
     def read(self):
         return [self.device.mass]
 
 
 deviceinfo_subclasses = {}
 for key, val in list(globals().items()):
-    if key.startswith('DeviceInfo') and key != 'DeviceInfo':
-        deviceinfo_subclasses[key[len('DeviceInfo'):].lower()] = val
+    if key.startswith("DeviceInfo") and key != "DeviceInfo":
+        deviceinfo_subclasses[key[len("DeviceInfo") :].lower()] = val
 
 
 def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
     """
     >>> import misc
     >>> import xlwings as xw
-    >>> wb, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet() # doctest: +ELLIPSIS
+    >>> wb, bookname, inputs_sheet, outputs_sheet = misc.get_ignis_spreadsheet() # doctest: +ELLIPSIS
     T...
     Y...
     >>> devices = get_devices_from_book(xw.books(wb.Name))
@@ -145,22 +139,28 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
 
     devices = []
     failures = []
-    for line in [i for i in device_info.iloc if i.active and not is_nan(i.active) and str(i).strip() != '']:
+    for line in [
+        i
+        for i in device_info.iloc
+        if i.active and not is_nan(i.active) and str(i).strip() != ""
+    ]:
 
         line = SimpleNamespace(**line)
 
         if line.device_name.lower() in deviceinfo_subclasses:
             device_class = deviceinfo_subclasses[line.device_name.lower()]
-            device_instance = get_type_hints(device_class)['device']()
+            device_instance = get_type_hints(device_class)["device"]()
             devices.append(
                 device_class(
-                    name=line.device_name, com='Unknown', device=device_instance, line=line
+                    name=line.device_name,
+                    com="Unknown",
+                    device=device_instance,
+                    line=line,
                 )
             )
 
-
         else:
-            for col in ['address', 'start_register', 'baud', 'no_of_bits']:
+            for col in ["address", "start_register", "baud", "no_of_bits"]:
                 try:
                     line.__dict__[col] = force_int(line.__dict__[col])
                 except ValueError:
@@ -174,9 +174,11 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
             line.communication_format = str(line.communication_format).lower()
 
             found_it = False
-            for com in [f"COM{i}" for i in range(1 ,12)]:
+            for com in [f"COM{i}" for i in range(1, 12)]:
                 try:
-                    dev = minimalmodbus.Instrument(com, line.address, mode=line.communication_format)
+                    dev = minimalmodbus.Instrument(
+                        com, line.address, mode=line.communication_format
+                    )
                     dev.serial.stopbits = line.stop
                     dev.serial.parity = line.parity
                     dev.serial.bytesizes = line.no_of_bits
@@ -190,17 +192,23 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
                         if line.device_name.lower() == "relay time set":
                             if f"com{int(line.start_register)}" != com.lower():
                                 raise minimalmodbus.IllegalRequestError()
-                        else: 
+                        else:
                             f(line.start_register, 1)
-                            
+
                         found_it = True
 
                         devices.append(
-                            DeviceInfo(name=line.device_name, com=com, device=dev, line=line)
+                            DeviceInfo(
+                                name=line.device_name, com=com, device=dev, line=line
+                            )
                         )
                         break
 
-                    except (minimalmodbus.NoResponseError, minimalmodbus.InvalidResponseError, minimalmodbus.IllegalRequestError) :
+                    except (
+                        minimalmodbus.NoResponseError,
+                        minimalmodbus.InvalidResponseError,
+                        minimalmodbus.IllegalRequestError,
+                    ):
                         pass
 
                 if found_it:
@@ -217,7 +225,4 @@ def get_devices(device_info: pd.DataFrame) -> List[DeviceInfo]:
 
 
 def get_devices_from_book(wb: Union[xw.Book, str, CDispatch]) -> List[DeviceInfo]:
-    return get_devices(
-        get_table_as_df(wb, 'device_info')
-    )
-
+    return get_devices(get_table_as_df(wb, "device_info"))
