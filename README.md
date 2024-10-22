@@ -1,2 +1,2 @@
-# ignis_controller
+# Icarus
 Control the Ignis Excel notebook for input/output
