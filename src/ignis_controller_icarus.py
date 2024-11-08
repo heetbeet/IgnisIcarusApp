@@ -22,7 +22,7 @@ def relay_crc(x):
 def get_harcoded_parameters(wb):
     return SimpleNamespace(
         reading_interval=misc.force_int(
-            wb.Sheets["Parameters"].Range("reading_interval").Value
+            wb.Sheets["Settings"].Range("reading_interval").Value
         ),
     )
 
