@@ -90,6 +90,7 @@ class DeviceInfo:
             return try_n(do_read, tries=4)
     
     # Here is where I should start
+    # Write_bit funtion required
     def write_bits(self, strobes: List[TimeStrober], register: int):
         strobes = [
             s if not isinstance(s, TimeStrober) else s.get_value() for s in strobes
