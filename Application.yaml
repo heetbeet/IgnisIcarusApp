@@ -1,4 +1,4 @@
-app-builder: v0.11.0
+app-builder: v0.16.0
 
 Application:
   name: Icarus
@@ -7,12 +7,13 @@ Application:
   installdir: '%localappdata%\Ignis\Icarus'
   pause: 1
 
-  programdata:
-    - [ ./bin, ./bin ]
-    - [ ./scripts, ./scripts ]
-    - [ ./src, ./src ]
-    - [ ./site-packages, ./site-packages ]
-    - [ ./Icarus.exe, ./Icarus.exe ]
+  data:
+    include:
+      - bin
+      - scripts
+      - src
+      - site-packages
+      - Icarus.exe
 
   startmenu:
     - Icarus.exe
