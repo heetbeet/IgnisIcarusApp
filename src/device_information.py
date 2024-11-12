@@ -100,8 +100,11 @@ class DeviceInfo:
         try_n(lambda: self.device.write_register(register, int_value), tries=4)
 
     def write(self, value, register):
-
-        try_n(lambda: self.device.write_register(register, value), tries=4)
+        if self.line.write_type == "reg":
+            try_n(lambda: self.device.write_register(register, value), tries=4)
+        elif self.line.write_type == "bit":
+            try_n(lambda: self.device.write_bit(register, value), tries=4)
+            
 
     def output_to_excel(self, sheet, line_number):
         if (vals := self.read()) is not None:
