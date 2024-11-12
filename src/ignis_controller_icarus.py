@@ -167,6 +167,7 @@ if __name__ == "__main__":
                             )(device, value)
                         )
                     else:
+                        
                         device.write(value.get_value(), register)
 
             if time.time() - prev > p.reading_interval:
