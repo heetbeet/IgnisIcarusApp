@@ -10,10 +10,10 @@ Application:
   data:
     include:
       - bin
-      - assets/*.ico
+      - scripts
       - src
       - site-packages
-      - scrips
+      - Icarus.exe
 
   startmenu:
     - Icarus.exe
