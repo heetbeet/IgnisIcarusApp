@@ -14,7 +14,6 @@ import crccheck
 
 modb = crccheck.crc.CrcModbus()
 
-
 def relay_crc(x):
     return modb.calcbytes(x)[::-1]
 
@@ -145,7 +144,7 @@ if __name__ == "__main__":
             update = outputs_sheet.Range("B3").Value
             if update != last_update:
                 values_to_write = update_write_values(wb, devices)
-
+            
             trigger_only_after_reading_interval = []
 
             for device, val_dict in zip(devices, values_to_write):
