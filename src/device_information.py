@@ -83,7 +83,15 @@ class DeviceInfo:
                     ):
                         values.extend(str2bits(self.device.read_string(i, 1))[::-1])
                     return values
-
+                elif self.line.datatype == "bits":
+                    first = self.line.start_register
+                    last = self.line.start_register + self.line.no_of_registers
+                    values = []
+                    for i in range(first, last, 8):
+                        values.extend(
+                            self.device.read_bits(i, min(i + 8, last) - i)
+                        )
+                    return values
                 else:
                     ValueError('Datatype must be either "uint" or "char bits"')
 
