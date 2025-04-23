@@ -83,6 +83,7 @@ class DeviceInfo:
                     ):
                         values.extend(str2bits(self.device.read_string(i, 1))[::-1])
                     return values
+                
                 elif self.line.datatype == "bits":
                     first = self.line.start_register
                     last = self.line.start_register + self.line.no_of_registers
